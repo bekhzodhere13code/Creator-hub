@@ -9,7 +9,7 @@ const body = Manrope({ subsets: ["latin", "latin-ext"], variable: "--font-body" 
 const display = Syne({ subsets: ["latin", "latin-ext"], variable: "--font-display", weight: ["600", "700", "800"] });
 
 export const metadata: Metadata = {
-  title: { default: "KreatorHub — mobilograf va SMM mutaxassislari platformasi", template: "%s · KreatorHub" },
+  title: { default: "Creator Hub — mobilograf va SMM mutaxassislari platformasi", template: "%s · Creator Hub" },
   description:
     "Mobilograf va SMM mutaxassisini bir joyda toping: portfoliolarni ko‘ring, xizmatni tanlang va buyurtma bering.",
 };
