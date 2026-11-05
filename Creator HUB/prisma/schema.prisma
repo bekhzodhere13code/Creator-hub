@@ -1,0 +1,111 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
+}
+
+enum UserRole {
+  MOBILOGRAF
+  SMM
+  MIJOZ
+}
+
+enum PriceType {
+  FIXED
+  NEGOTIABLE
+}
+
+enum OrderStatus {
+  NEW
+  ACCEPTED
+  IN_PROGRESS
+  DONE
+  REJECTED
+  CANCELLED
+}
+
+model User {
+  id        String   @id @default(cuid())
+  clerkId   String   @unique
+  email     String
+  fullName  String
+  role      UserRole
+  city      String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  masterProfile   MasterProfile?
+  services        Service[]
+  portfolioItems  PortfolioItem[]
+  ordersAsClient  Order[]         @relation("ClientOrders")
+  ordersAsMaster  Order[]         @relation("MasterOrders")
+
+  @@index([role])
+}
+
+// 1-bosqichda faqat yoziladi; katalog 2-bosqichda ishlatadi
+model MasterProfile {
+  id           String   @id @default(cuid())
+  userId       String   @unique
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  experience   String
+  bio          String?
+  instagramUrl String?
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+}
+
+// 2-bosqich
+model Service {
+  id          String    @id @default(cuid())
+  masterId    String
+  master      User      @relation(fields: [masterId], references: [id], onDelete: Cascade)
+  title       String
+  description String?
+  priceType   PriceType @default(NEGOTIABLE)
+  priceFrom   Int?
+  durationDays Int?
+  isActive    Boolean   @default(true)
+  createdAt   DateTime  @default(now())
+  orders      Order[]
+
+  @@index([masterId])
+}
+
+// 2-bosqich
+model PortfolioItem {
+  id          String   @id @default(cuid())
+  userId      String
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  title       String
+  description String?
+  mediaUrl    String
+  createdAt   DateTime @default(now())
+
+  @@index([userId])
+}
+
+// 3-bosqich
+model Order {
+  id        String      @id @default(cuid())
+  clientId  String
+  client    User        @relation("ClientOrders", fields: [clientId], references: [id])
+  masterId  String
+  master    User        @relation("MasterOrders", fields: [masterId], references: [id])
+  serviceId String
+  service   Service     @relation(fields: [serviceId], references: [id])
+  brief     String
+  deadline  DateTime?
+  status    OrderStatus @default(NEW)
+  createdAt DateTime    @default(now())
+  updatedAt DateTime    @updatedAt
+
+  @@index([clientId])
+  @@index([masterId])
+  @@index([serviceId])
+  @@index([status])
+}
