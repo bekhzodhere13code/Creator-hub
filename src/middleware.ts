@@ -1,6 +1,6 @@
 import { clerkMiddleware, createRouteMatcher } from "@clerk/nextjs/server";
 
-const isPublicRoute = createRouteMatcher(["/", "/sign-in(.*)", "/sign-up(.*)"]);
+const isPublicRoute = createRouteMatcher(["/", "/sign-in(.*)", "/sign-up(.*)", "/api/telegram/webhook", "/api/telegram/setup"]);
 
 // Login qilmagan foydalanuvchi ochiq bo‘lmagan sahifaga kirsa -> /sign-in.
 // API marshrutlarida esa 401 qaytadi.

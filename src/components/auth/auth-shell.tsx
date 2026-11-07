@@ -1,5 +1,5 @@
 import { Check } from "lucide-react";
-import { Logo } from "@/components/ui/logo";
+import { Logo } from "@/components/logo";
 
 export function AuthShell({
   heading,

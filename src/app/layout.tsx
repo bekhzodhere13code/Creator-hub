@@ -1,6 +1,10 @@
 import type { Metadata, Viewport } from "next";
 import { Manrope, Syne } from "next/font/google";
+import { cookies } from "next/headers";
 import { ClerkProvider } from "@clerk/nextjs";
+import { ruRU } from "@clerk/localizations";
+import { LangProvider } from "@/lib/i18n-client";
+import { isLang } from "@/lib/i18n";
 import { clerkAppearance } from "@/lib/clerk-appearance";
 import { uzLocalization } from "@/lib/clerk-uz";
 import "./globals.css";
@@ -16,11 +20,13 @@ export const metadata: Metadata = {
 
 export const viewport: Viewport = { themeColor: "#3A14FF", width: "device-width", initialScale: 1 };
 
-export default function RootLayout({ children }: { children: React.ReactNode }) {
+export default async function RootLayout({ children }: { children: React.ReactNode }) {
+  const c = (await cookies()).get("lang")?.value;
+  const lang = isLang(c) ? c : "uz";
   return (
-    <ClerkProvider appearance={clerkAppearance} localization={uzLocalization}>
-      <html lang="uz" className={`${body.variable} ${display.variable}`}>
-        <body>{children}</body>
+    <ClerkProvider signInUrl="/sign-in" signUpUrl="/sign-up" signInFallbackRedirectUrl="/" signUpFallbackRedirectUrl="/" appearance={clerkAppearance} localization={lang === "ru" ? ruRU : uzLocalization}>
+      <html lang={lang} className={`${body.variable} ${display.variable}`}>
+        <body><LangProvider initial={lang}>{children}</LangProvider></body>
       </html>
     </ClerkProvider>
   );

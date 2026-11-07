@@ -1,30 +1,13 @@
 # Creator Hub
 
-Mobilograf va SMM mutaxassislari platformasi. **1-bosqich**: Clerk auth, rol tanlash (onboarding), rolga qarab dashboard.
-
-Stack: Next.js 15 (App Router) · TypeScript · Tailwind CSS 3 · Clerk · Prisma · Supabase (PostgreSQL)
-
-## Ishga tushirish
-
-```bash
-npm install
-cp .env.example .env.local      # CLERK_SECRET_KEY, DATABASE_URL, DIRECT_URL ni to‘ldiring
-npx prisma db push              # jadvallarni Supabase'ga yaratadi
-npm run dev                     # http://localhost:3000
-npm run typecheck && npm run build
-```
+Mobilograf va SMM mutaxassislari platformasi. Next.js 15 (App Router) + Clerk + Supabase (Postgres, Storage) + Telegram bot.
 
 ## Oqim
+Mijoz xizmatda **Sotib olish** ni bosadi -> buyurtma yaratiladi, Click raqami ko‘rinadi, mutaxassisga Telegram botdan
+xabar boradi (**To‘landi / To‘lanmadi** tugmalari bilan). Mutaxassis tasdiqlaguncha mijozda kutish animatsiyasi,
+tasdiqlangach Telegram havolasi ochiladi va Home’ga o‘tiladi. To‘lov Click API orqali tekshirilmaydi — mutaxassisning tasdig‘iga tayanadi.
 
-`/` (ochiq) → `/sign-up` yoki `/sign-in` (Clerk) → rol yo‘q bo‘lsa `/onboarding` → `/dashboard` (rolga qarab).
-Login qilmagan foydalanuvchi boshqa har qanday sahifada `/sign-in`'ga yuboriladi (`src/middleware.ts`).
-
-## Xavfsizlik
-
-- Rol faqat server tomonda (`src/server/services/onboarding.ts`) Clerk `publicMetadata.role` ga yoziladi va qayta o‘zgartirilmaydi.
-- Sahifalar rolni har so‘rovda Clerk'dan o‘qiydi (`src/lib/auth.ts`).
-- Kelajakdagi mobil ilova uchun: `GET /api/v1/me`, `POST /api/v1/onboarding`.
-
-## Keyingi bosqichlar
-
-2: katalog, mutaxassis profili, xizmatlar, portfolio · 3: buyurtmalar.
+## Ishga tushirish
+`.env.example` dagi o‘zgaruvchilarni to‘ldiring, `npm i && npm run dev`.
+Telegram webhook: deploydan keyin `https://<domen>/api/telegram/setup?key=<TELEGRAM_WEBHOOK_SECRET>` ni bir marta oching.
+Ma’lumotlar bazasi sxemasi Supabase migratsiyalarida (profiles, services, portfolio, orders, storage bucket `media`).

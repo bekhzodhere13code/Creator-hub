@@ -7,8 +7,9 @@ export const metadata: Metadata = { title: "Ro‘yxatdan o‘tish" };
 export default function SignUpPage() {
   return (
     <AuthShell
-      heading="Rolingizni tanlang va boshlang"
-      text="Mobilograf va SMM mutaxassislari xizmatlarini sotadi, kerak bo‘lsa boshqa xizmatlarni sotib ham oladi. Mijozlar xizmatlarni ko‘radi va buyurtma beradi. Rolni ro‘yxatdan o‘tgach tanlaysiz."
+      heading="Creator Hub’da profilingizni yarating"
+      text="Mobilograf va SMM mutaxassislari xizmatlarini qo‘shadi, portfolio ko‘rsatadi va buyurtma oladi. Mutaxassislikni ro‘yxatdan o‘tgach tanlaysiz."
+      points={["Google yoki email orqali tez kirish", "Xizmatlar va portfolio — bir joyda", "Buyurtma Telegram’ga darhol keladi"]}
     >
       <SignUp />
     </AuthShell>
