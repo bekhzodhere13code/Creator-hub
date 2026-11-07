@@ -1,6 +1,6 @@
 import "server-only";
 import { randomUUID } from "node:crypto";
-import { admin, MEDIA_BUCKET } from "./supabase";
+import { admin, mediaUrl, MEDIA_BUCKET } from "./supabase";
 
 const MAX_BYTES = 3 * 1024 * 1024;
 
@@ -14,7 +14,7 @@ export async function uploadDataUrl(userId: string, dataUrl: string, folder: str
   const path = `${userId}/${folder}/${randomUUID()}.${ext}`;
   const { error } = await admin().storage.from(MEDIA_BUCKET).upload(path, buf, { contentType: m[1], cacheControl: "31536000", upsert: false });
   if (error) throw new Error("Rasmni yuklashda xatolik");
-  return admin().storage.from(MEDIA_BUCKET).getPublicUrl(path).data.publicUrl;
+  return mediaUrl(path);
 }
 
 /** Eski rasmni (faqat o‘zimizning bucket'dagini) o‘chiradi; xato bo‘lsa e’tibor bermaydi. */
