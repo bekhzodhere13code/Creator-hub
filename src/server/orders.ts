@@ -122,7 +122,7 @@ export async function decideOrderFor(sellerId: string, orderId: string, yes: boo
   // Telegramdagi xabarni yangilash va mijozga xabar berish (bot ulangan bo‘lsa).
   if (telegramEnabled()) {
     const [{ data: seller }, { data: client }] = await Promise.all([
-      db.from("profiles").select("tg_chat_id, language").eq("id", sellerId).maybeSingle(),
+      db.from("profiles").select("tg_chat_id, language, telegram").eq("id", sellerId).maybeSingle(),
       db.from("profiles").select("tg_chat_id, language").eq("id", o.client_id).maybeSingle(),
     ]);
     if (seller?.tg_chat_id && o.tg_message_id) {
@@ -135,7 +135,8 @@ export async function decideOrderFor(sellerId: string, orderId: string, yes: boo
     }
     if (client?.tg_chat_id) {
       const T = TG_TEXT[tgLang(client.language)];
-      await tg("sendMessage", { chat_id: client.tg_chat_id, text: `${yes ? T.paidToClient : T.rejectedToClient} ${o.service_title ?? ""}` });
+      const link = yes ? normalizeUrl(seller?.telegram, "telegram") : null;
+      await tg("sendMessage", { chat_id: client.tg_chat_id, text: `${yes ? T.paidToClient : T.rejectedToClient} ${o.service_title ?? ""}${link ? `\n✈️ ${link}` : ""}` });
     }
   }
   return { ok: true, status };
