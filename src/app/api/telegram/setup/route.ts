@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { admin } from "@/server/supabase";
 import { tg } from "@/server/telegram";
 
 export const runtime = "nodejs";
@@ -13,5 +14,10 @@ export async function GET(req: Request) {
   const set = await tg("setWebhook", { url: hook, secret_token: secret, allowed_updates: ["message", "callback_query"], drop_pending_updates: true });
   const me = await tg<{ username: string }>("getMe", {});
   const info = await tg("getWebhookInfo", {});
-  return NextResponse.json({ webhook: hook, setWebhook: set, bot: me.ok ? me.result?.username : me, info });
+  let test: unknown = undefined;
+  if (url.searchParams.get("test")) {
+    const { data } = await admin().from("profiles").select("id, tg_chat_id").not("tg_chat_id", "is", null);
+    test = await Promise.all((data ?? []).map(async (p) => ({ id: p.id, chat: p.tg_chat_id, res: await tg("sendMessage", { chat_id: p.tg_chat_id, text: "✅ Creator Hub test xabari" }) })));
+  }
+  return NextResponse.json({ webhook: hook, setWebhook: set, bot: me.ok ? me.result?.username : me, info, test });
 }

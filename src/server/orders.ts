@@ -95,6 +95,7 @@ export async function markOrderPaidFor(clientId: string, orderId: string): Promi
       reply_markup: { inline_keyboard: [[{ text: T.yes, callback_data: `o:${orderId}:y` }, { text: T.no, callback_data: `o:${orderId}:n` }]] },
     });
     notified = r.ok;
+    if (!r.ok) console.error("[telegram] sendMessage failed", JSON.stringify(r));
     if (r.ok && r.result?.message_id) await db.from("orders").update({ tg_message_id: r.result.message_id }).eq("id", orderId);
   }
   return { ok: true, notified };
