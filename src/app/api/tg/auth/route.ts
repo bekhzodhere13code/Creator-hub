@@ -15,12 +15,38 @@ export async function POST(req: Request) {
   const user = initData ? verifyInitData(initData, botToken) : null;
   if (!user) return NextResponse.json({ ok: false, reason: "invalid" }, { status: 401 });
 
-  const { data: prof } = await admin().from("profiles").select("id").eq("tg_chat_id", user.id).maybeSingle();
-  if (!prof) return NextResponse.json({ ok: false, reason: "not_linked" });
-
   try {
+    const db = admin();
     const client = await clerkClient();
-    const t = await client.signInTokens.createSignInToken({ userId: prof.id as string, expiresInSeconds: 60 });
+    let userId: string | null = null;
+
+    const { data: prof } = await db.from("profiles").select("id").eq("tg_chat_id", user.id).maybeSingle();
+    if (prof) userId = prof.id as string;
+
+    if (!userId) {
+      // Telegram hisobi saytga ulanmagan: Telegram orqali yangi hisob ochamiz (yoki avvalgisini topamiz).
+      const externalId = `tg_${user.id}`;
+      const found = await client.users.getUserList({ externalId: [externalId], limit: 1 });
+      let clerkUser = found.data[0];
+      if (!clerkUser) {
+        clerkUser = await client.users.createUser({
+          externalId,
+          firstName: (user.first_name ?? "").slice(0, 40) || undefined,
+          lastName: (user.last_name ?? "").slice(0, 40) || undefined,
+          emailAddress: [`tg${user.id}@telegram.creator-hub.app`],
+          skipPasswordRequirement: true,
+        });
+      }
+      userId = clerkUser.id;
+      // Profil qatori va Telegram ulanishi (profil rasmi avtomatik qo‘yilmaydi)
+      await db.from("profiles").upsert(
+        { id: userId, first_name: (user.first_name ?? "").slice(0, 40), last_name: (user.last_name ?? "").slice(0, 40), specialties: [], avatar_url: null },
+        { onConflict: "id", ignoreDuplicates: true },
+      );
+      await db.from("profiles").update({ tg_chat_id: user.id }).eq("id", userId);
+    }
+
+    const t = await client.signInTokens.createSignInToken({ userId, expiresInSeconds: 60 });
     return NextResponse.json({ ok: true, token: t.token });
   } catch (e) {
     console.error("[tg auth]", e);

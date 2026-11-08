@@ -211,7 +211,7 @@ const uz = {
     phSearch: "Ism yoki xizmat bo‘yicha qidiring",
     tgAppLoading: "Telegram orqali kirilmoqda…",
     tgAppTitle: "Hisobingiz topilmadi",
-    tgAppNotLinked: "Bu Telegram hisobi saytdagi profilga ulanmagan. Avval saytda ro‘yxatdan o‘ting, so‘ng Profil → “Botni ulash” tugmasini bosing — keyin Mini App avtomatik ochiladi.",
+    tgAppNotLinked: "Telegram orqali kirib bo‘lmadi. Qayta urinib ko‘ring yoki saytda ro‘yxatdan o‘ting.",
     tgAppOpenSite: "Saytda ro‘yxatdan o‘tish",
     tgAppBrowser: "Bu sahifa Telegram ichida ochilishi kerak. Brauzerda oddiy kirishdan foydalaning.",
   },
