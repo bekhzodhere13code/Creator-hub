@@ -58,7 +58,7 @@ export async function createOrderFor(userId: string, serviceId: string): Promise
 
   const { data: order, error } = await db
     .from("orders")
-    .insert({ service_id: s.id, service_title: s.title, price: s.price, client_id: userId, owner_id: s.owner_id, status: "pending" })
+    .insert({ service_id: s.id, service_title: s.title, price: s.price, client_id: userId, owner_id: s.owner_id, status: "new" })
     .select("id")
     .single();
   if (error || !order) { console.error("[orders] insert", error); return { ok: false, error: "failed" }; }
