@@ -13,10 +13,10 @@ const REDIRECT_MS = 6000;
 export function OrderView({ id }: { id: string }) {
   const { t } = useT();
   const router = useRouter();
-  const { me, data, profile, pollOrder, decideOrder, cancelOrder, refresh } = useStore();
+  const { me, data, profile, pollOrder, decideOrder, cancelOrder, markPaid, refresh } = useStore();
   const order = data.orders.find((o) => o.id === id);
   const sawPending = useRef(false);
-  const [busy, setBusy] = useState<"" | "y" | "n" | "c">("");
+  const [busy, setBusy] = useState<"" | "y" | "n" | "c" | "p">("");
   const [error, setError] = useState("");
   const [copied, setCopied] = useState(false);
   const status = order?.status;
@@ -60,6 +60,12 @@ export function OrderView({ id }: { id: string }) {
     if (!r.ok) setError(r.error);
     setBusy("");
   };
+  const paid = async () => {
+    setBusy("p"); setError("");
+    const r = await markPaid(order.id);
+    if (!r.ok) setError(r.error);
+    setBusy("");
+  };
   const cancel = async () => {
     if (!confirm(t.order.confirmCancel)) return;
     setBusy("c");
@@ -96,6 +102,24 @@ export function OrderView({ id }: { id: string }) {
           </p>
         </div>
 
+        {status === "new" && isClient && (
+          <>
+            <div className="space-y-3 rounded-xl border border-slate-200 p-4">
+              <p className="text-sm text-ink-soft">{t.order.step1}</p>
+              <div className="flex items-center justify-between gap-3 rounded-xl bg-surface px-4 py-3">
+                <span className="break-all font-display text-xl font-extrabold tracking-wide">{order.owner_click}</span>
+                <button onClick={copy} className="btn btn-outline !px-3 !py-2 shrink-0"><Copy className="h-4 w-4" /> {copied ? t.order.copied : t.order.copy}</button>
+              </div>
+              {price && <p className="text-sm">{t.order.amount}: <b>{price} {t.common.sum}</b></p>}
+              <p className="text-xs text-ink-soft">{t.order.newHint}</p>
+            </div>
+            <button onClick={paid} disabled={busy !== ""} className="btn btn-green w-full"><Check className="h-4 w-4" /> {busy === "p" ? t.common.loading : t.order.iPaid}</button>
+            <button onClick={cancel} disabled={busy !== ""} className="text-sm font-semibold text-ink-soft hover:text-red-600 hover:underline">{t.order.cancel}</button>
+          </>
+        )}
+
+        {status === "new" && !isClient && <p className="flex items-center gap-2 rounded-xl bg-amber-50 px-4 py-3 text-sm font-semibold text-amber-800"><Clock className="h-4 w-4" /> {t.order.sellerNew}</p>}
+
         {status === "pending" && isClient && (
           <>
             <div className="space-y-3 rounded-xl border border-slate-200 p-4">
@@ -116,7 +140,6 @@ export function OrderView({ id }: { id: string }) {
                 <span className="block text-sm text-ink-soft">{t.order.waitingText}</span>
               </span>
             </div>
-            <button onClick={cancel} disabled={busy !== ""} className="text-sm font-semibold text-ink-soft hover:text-red-600 hover:underline">{t.order.cancel}</button>
           </>
         )}
 

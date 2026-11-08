@@ -18,7 +18,7 @@ export function Onboarding() {
     const specialties = fd.getAll("specialties").map(String).filter((s): s is "mobilograf" | "smm" => s === "mobilograf" || s === "smm");
     if (first.length < 2) return { ok: false, error: t.profile.firstName };
     if (!specialties.length) return { ok: false, error: t.onboard.text };
-    return saveProfile({ first_name: first, last_name: String(fd.get("last_name") ?? "").trim(), bio: me.bio ?? "", click_number: me.click_number, specialties });
+    return saveProfile({ first_name: first, last_name: String(fd.get("last_name") ?? "").trim(), bio: me.bio ?? "", work_area: me.work_area, click_number: me.click_number, specialties });
   });
 
   if (skipped || (me.specialties?.length ?? 0) > 0) return null;

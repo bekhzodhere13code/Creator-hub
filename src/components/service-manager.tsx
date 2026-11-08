@@ -85,12 +85,13 @@ function SocialModalBody({ onDone }: { onDone: () => void }) {
 
 function ServiceForm({ service, onDone }: { service: ServiceWithOwner | null; onDone: () => void }) {
   const { t, lang } = useT();
-  const { saveService } = useStore();
+  const { me, saveService } = useStore();
   const { pending, error, submit } = useFormAction(async (fd) => {
     const title = String(fd.get("title") ?? "").trim();
     const description = String(fd.get("description") ?? "").trim();
     if (title.length < 3) return { ok: false, error: lang === "ru" ? "Название: минимум 3 символа" : "Nomi kamida 3 belgi" };
     if (description.length < 10) return { ok: false, error: lang === "ru" ? "Описание: минимум 10 символов" : "Tavsif kamida 10 belgi" };
+    if (!me.click_number && String(fd.get("click_number") ?? "").replace(/\D/g, "").length < 9) return { ok: false, error: lang === "ru" ? "Введите номер карты или телефон Click" : "Karta yoki Click raqamini kiriting" };
     const priceRaw = String(fd.get("price") ?? "").replace(/\s/g, "");
     const image = await readImage(fd.get("image"));
     return saveService({
@@ -99,6 +100,7 @@ function ServiceForm({ service, onDone }: { service: ServiceWithOwner | null; on
       category: String(fd.get("category")) as (typeof CATEGORIES)[number],
       price: priceRaw ? Number(priceRaw) : null,
       status: fd.get("active") === "on" ? "active" : "inactive",
+      click_number: String(fd.get("click_number") ?? "").replace(/[^\d+ ]/g, "").trim() || null,
       image,
     });
   }, onDone);
@@ -115,6 +117,9 @@ function ServiceForm({ service, onDone }: { service: ServiceWithOwner | null; on
         </Label>
         <Label text={t.my.fPrice}><input name="price" inputMode="numeric" pattern="[0-9 ]*" defaultValue={service?.price ?? ""} placeholder="500000" className="field" /></Label>
       </div>
+      {!me.click_number && (
+        <Label text={t.profile.click} hint={t.profile.clickHint}><input name="click_number" required inputMode="tel" maxLength={30} placeholder="8600 0000 0000 0000" className="field" /></Label>
+      )}
       <Label text={t.my.fImage}><input type="file" name="image" accept="image/jpeg,image/png,image/webp" className="field file:mr-3 file:rounded-md file:border-0 file:bg-brand-50 file:px-3 file:py-1 file:text-sm file:font-semibold file:text-brand" /></Label>
       <label className="flex items-center gap-2 text-sm font-medium">
         <input type="checkbox" name="active" defaultChecked={service ? service.status === "active" : true} className="h-4 w-4 rounded accent-[#3A14FF]" /> {t.my.fActive}

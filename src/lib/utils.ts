@@ -14,6 +14,7 @@ export type Profile = {
   youtube: string | null;
   click_number: string | null; // faqat o‘z profilingiz uchun; boshqalarda null
   avatar_url: string | null;
+  work_area?: string | null; // qayerda ishlay olishi
   has_click?: boolean; // boshqa foydalanuvchida Click raqami bor-yo‘qligi
   tg_linked?: boolean; // faqat o‘z profilingiz: Telegram bot ulanganmi
 };
@@ -55,7 +56,7 @@ export type Order = {
   decided_at: string | null;
   owner_click?: string | null; // faqat mijoz uchun va faqat kutilayotgan buyurtmada
 };
-export type OrderStatus = "pending" | "confirmed" | "rejected" | "cancelled" | "expired";
+export type OrderStatus = "new" | "pending" | "confirmed" | "rejected" | "cancelled" | "expired";
 
 export const fullName = (p?: { first_name?: string | null; last_name?: string | null } | null) =>
   [p?.first_name, p?.last_name].filter(Boolean).join(" ").trim() || "—";

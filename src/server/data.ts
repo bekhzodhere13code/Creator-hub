@@ -35,12 +35,12 @@ export async function ensureProfile(userId: string): Promise<ProfileRow> {
 
 const publicProfile = (r: ProfileRow): Profile => ({
   id: r.id, first_name: r.first_name, last_name: r.last_name, specialties: r.specialties, bio: r.bio,
-  telegram: r.telegram, instagram: r.instagram, youtube: r.youtube, avatar_url: r.avatar_url,
+  telegram: r.telegram, instagram: r.instagram, youtube: r.youtube, avatar_url: r.avatar_url, work_area: r.work_area ?? null,
   click_number: null, has_click: Boolean(r.click_number),
 });
 
 export function effectiveStatus(o: { status: string; expires_at: string | null }): OrderStatus {
-  if (o.status === "pending" && o.expires_at && new Date(o.expires_at).getTime() < Date.now()) return "expired";
+  if ((o.status === "pending" || o.status === "new") && o.expires_at && new Date(o.expires_at).getTime() < Date.now()) return "expired";
   return o.status as OrderStatus;
 }
 
@@ -53,7 +53,7 @@ export async function loadOrder(userId: string, id: string): Promise<Order | nul
 async function shapeOrder(userId: string, o: Record<string, unknown>, ownerClick: string | null): Promise<Order> {
   const status = effectiveStatus(o as { status: string; expires_at: string | null });
   let owner_click: string | null = null;
-  if (status === "pending" && o.client_id === userId) {
+  if ((status === "pending" || status === "new") && o.client_id === userId) {
     owner_click = ownerClick;
     if (owner_click === null) {
       const { data } = await admin().from("profiles").select("click_number").eq("id", o.owner_id as string).maybeSingle();

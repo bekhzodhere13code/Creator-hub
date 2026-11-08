@@ -1,7 +1,7 @@
 "use client";
 import Link from "next/link";
 import { useParams } from "next/navigation";
-import { Instagram, Send, Youtube } from "lucide-react";
+import { Instagram, MapPin, Send, Youtube } from "lucide-react";
 import { Avatar } from "@/components/avatar";
 import { Empty, ServiceCard } from "@/components/cards";
 import { PortfolioGrid } from "@/components/portfolio";
@@ -34,6 +34,7 @@ export default function CreatorPage() {
               <span key={s} className="rounded-full bg-brand-50 px-2.5 py-1 text-xs font-semibold text-brand">{t.specialty[s as "mobilograf" | "smm"] ?? s}</span>
             ))}
           </div>
+          {p.work_area && <p className="mt-3 flex items-center gap-1.5 text-sm font-medium"><MapPin className="h-4 w-4 text-brand" /> {p.work_area}</p>}
           {p.bio && <p className="mt-3 max-w-xl whitespace-pre-line text-sm text-ink-soft">{p.bio}</p>}
           {links.length > 0 && (
             <div className="mt-4 flex flex-wrap gap-2">

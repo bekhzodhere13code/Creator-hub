@@ -5,7 +5,7 @@ import { useT } from "./i18n-client";
 import type { Order, PortfolioItem, Profile, Service, ServiceWithOwner } from "./utils";
 import {
   addPortfolioAction, cancelOrderAction, createOrderAction, decideOrderAction, deletePortfolioAction,
-  deleteServiceAction, saveProfileAction, saveServiceAction, saveSocialsAction, getOrderAction,
+  deleteServiceAction, markPaidAction, saveProfileAction, saveServiceAction, saveSocialsAction, getOrderAction,
 } from "@/server/actions";
 
 export type AppSnapshot = { me: Profile; profiles: Profile[]; services: Service[]; portfolio: PortfolioItem[]; orders: Order[] };
@@ -28,6 +28,7 @@ type Store = {
   addPortfolio: (p: PortfolioInput) => Promise<Res>;
   deletePortfolio: (id: string) => Promise<Res>;
   createOrder: (serviceId: string) => Promise<Res<{ id: string; notified: boolean }>>;
+  markPaid: (id: string) => Promise<Res<{ notified?: boolean }>>;
   decideOrder: (id: string, yes: boolean) => Promise<Res<{ status?: string }>>;
   cancelOrder: (id: string) => Promise<Res>;
   pollOrder: (id: string) => Promise<Order | null>;
@@ -75,6 +76,11 @@ export function StoreProvider({ snapshot, children }: { snapshot: AppSnapshot; c
         const r = await createOrderAction(id);
         if (r.ok) { router.refresh(); return r; }
         return { ok: false, error: orderErr[r.code] ?? t.common.error };
+      },
+      markPaid: async (id) => {
+        const r = await markPaidAction(id);
+        router.refresh();
+        return r.ok ? { ok: true, notified: r.notified } : { ok: false, error: r.error === "expired" ? t.order.sExpired : r.error === "already" ? t.order.sPending : t.common.error };
       },
       decideOrder: async (id, yes) => {
         const r = await decideOrderAction(id, yes);

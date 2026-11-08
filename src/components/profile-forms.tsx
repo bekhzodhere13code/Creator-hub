@@ -22,6 +22,7 @@ export function ProfileForm() {
       first_name: first,
       last_name: String(fd.get("last_name") ?? "").trim(),
       bio: String(fd.get("bio") ?? "").trim(),
+      work_area: String(fd.get("work_area") ?? "").trim() || null,
       click_number: String(fd.get("click_number") ?? "").replace(/[^\d+ ]/g, "").trim() || null,
       specialties: fd.getAll("specialties").map(String).filter((s) => s === "mobilograf" || s === "smm"),
       avatar,
@@ -51,6 +52,7 @@ export function ProfileForm() {
         </div>
       </fieldset>
       <Label text={t.profile.bio}><textarea name="bio" rows={3} maxLength={500} defaultValue={me.bio ?? ""} className="field" /></Label>
+      <Label text={t.profile.workArea} hint={t.profile.workAreaHint}><input name="work_area" maxLength={120} defaultValue={me.work_area ?? ""} placeholder="Toshkent, masofaviy" className="field" /></Label>
       <Label text={t.profile.click} hint={t.profile.clickHint}><input name="click_number" inputMode="tel" maxLength={30} defaultValue={me.click_number ?? ""} placeholder="8600 0000 0000 0000" className="field" /></Label>
       <FormError error={error} />
       <div className="flex items-center gap-3">

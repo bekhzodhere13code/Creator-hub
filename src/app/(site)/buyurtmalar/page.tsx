@@ -14,6 +14,7 @@ export default function OrdersPage() {
   const Row = ({ o, other }: { o: Order; other: string }) => {
     const price = formatPrice(o.price);
     const STATE = {
+      new: [t.order.sNew, "bg-slate-100 text-ink-soft"],
       pending: [o.owner_id === me.id ? t.order.pendingBadge : t.order.sPending, "bg-amber-50 text-amber-800"],
       confirmed: [t.order.sConfirmed, "bg-emerald-50 text-emerald-700"],
       rejected: [t.order.sRejected, "bg-red-50 text-red-700"],

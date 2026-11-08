@@ -4,7 +4,7 @@ import { auth } from "@clerk/nextjs/server";
 import { z } from "zod";
 import { admin } from "./supabase";
 import { ensureProfile, loadOrder } from "./data";
-import { createOrderFor, decideOrderFor } from "./orders";
+import { createOrderFor, decideOrderFor, markOrderPaidFor } from "./orders";
 import { removeMedia, uploadDataUrl } from "./media";
 import { getBotUsername, telegramEnabled } from "./telegram";
 import { CATEGORIES, normalizeUrl, youtubeId, type Order } from "@/lib/utils";
@@ -33,6 +33,7 @@ const profileSchema = z.object({
   first_name: text(40).min(2),
   last_name: text(40),
   bio: text(500),
+  work_area: text(120).nullish(),
   click_number: z.string().trim().max(30).regex(/^[\d+ ]*$/).nullish(),
   specialties: z.array(z.enum(["mobilograf", "smm"])).max(2),
   avatar: dataUrl,
@@ -45,7 +46,7 @@ export async function saveProfileAction(input: z.input<typeof profileSchema>): P
     if (!p.success) return { ok: false, error: "Ma’lumotlarni tekshiring" };
     const cur = await ensureProfile(userId);
     const patch: Record<string, unknown> = {
-      first_name: p.data.first_name, last_name: p.data.last_name, bio: p.data.bio,
+      first_name: p.data.first_name, last_name: p.data.last_name, bio: p.data.bio, work_area: p.data.work_area?.trim() || null,
       click_number: p.data.click_number?.trim() || null, specialties: [...new Set(p.data.specialties)],
       updated_at: new Date().toISOString(),
     };
@@ -91,6 +92,7 @@ const serviceSchema = z.object({
   category: z.enum(CATEGORIES),
   price: z.number().int().positive().max(1_000_000_000).nullable(),
   status: z.enum(["active", "inactive"]),
+  click_number: z.string().trim().max(30).regex(/^[\d+ ]*$/).nullish(),
   image: dataUrl,
 });
 
@@ -99,8 +101,12 @@ export async function saveServiceAction(input: z.input<typeof serviceSchema>): P
     const userId = await uid();
     const p = serviceSchema.safeParse(input);
     if (!p.success) return { ok: false, error: "Ma’lumotlarni tekshiring" };
-    await ensureProfile(userId);
+    const prof = await ensureProfile(userId);
     const db = admin();
+    // Karta raqami: birinchi xizmatda majburiy (mijoz shu raqamga to‘laydi).
+    const card = p.data.click_number?.trim() || prof.click_number || null;
+    if (!card) return { ok: false, error: "Karta raqamini kiriting" };
+    if (card !== prof.click_number) await db.from("profiles").update({ click_number: card }).eq("id", userId);
     const row: Record<string, unknown> = { title: p.data.title, description: p.data.description, category: p.data.category, price: p.data.price, status: p.data.status };
     if (p.data.id) {
       const { data: cur } = await db.from("services").select("owner_id,image_url").eq("id", p.data.id).maybeSingle();
@@ -180,6 +186,16 @@ export async function createOrderAction(serviceId: string): Promise<Ok<{ id: str
   } catch (e) {
     console.error("[createOrder]", e);
     return { ok: false, error: "failed", code: "failed" };
+  }
+}
+
+export async function markPaidAction(orderId: string): Promise<Ok<{ notified: boolean }> | { ok: false; error: string }> {
+  try {
+    const userId = await uid();
+    return await markOrderPaidFor(userId, orderId);
+  } catch (e) {
+    console.error("[markPaid]", e);
+    return { ok: false, error: "failed" };
   }
 }
 

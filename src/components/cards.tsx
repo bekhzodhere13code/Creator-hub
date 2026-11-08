@@ -1,6 +1,6 @@
 import Image from "next/image";
 import Link from "next/link";
-import { Camera, Film, ImageIcon, Palette, PenLine, Sparkles, TrendingUp } from "lucide-react";
+import { Camera, Film, ImageIcon, MapPin, Palette, PenLine, Sparkles, TrendingUp } from "lucide-react";
 import { Avatar } from "./avatar";
 import type { Dict } from "@/lib/i18n";
 import { fullName, formatPrice, gradientFor, type Profile, type ServiceWithOwner } from "@/lib/utils";
@@ -44,7 +44,7 @@ export function ServiceCard({ s, t, href }: { s: ServiceWithOwner; t: Dict; href
   );
 }
 
-type CreatorLite = Pick<Profile, "id" | "first_name" | "last_name" | "specialties" | "bio" | "avatar_url">;
+type CreatorLite = Pick<Profile, "id" | "first_name" | "last_name" | "specialties" | "bio" | "avatar_url" | "work_area">;
 
 export function CreatorCard({ p, t }: { p: CreatorLite; t: Dict }) {
   return (
@@ -57,7 +57,8 @@ export function CreatorCard({ p, t }: { p: CreatorLite; t: Dict }) {
             <span key={sp} className="rounded-full bg-brand-50 px-2 py-0.5 text-xs font-semibold text-brand">{t.specialty[sp as keyof Dict["specialty"]] ?? sp}</span>
           ))}
         </div>
-        {p.bio && <p className="mt-2 line-clamp-2 text-sm text-ink-soft">{p.bio}</p>}
+        {p.work_area && <p className="mt-2 flex items-center gap-1 text-xs font-medium text-ink-soft"><MapPin className="h-3.5 w-3.5" /> {p.work_area}</p>}
+        {p.bio && <p className="mt-1.5 line-clamp-2 text-sm text-ink-soft">{p.bio}</p>}
       </div>
     </Link>
   );
