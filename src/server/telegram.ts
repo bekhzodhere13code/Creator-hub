@@ -48,10 +48,11 @@ export const TG_TEXT = {
     sum: "so‘m",
     linked: "✅ Creator Hub botiga ulandingiz. Endi yangi buyurtmalar shu yerga keladi.",
     badCode: "Havola eskirgan. Saytdagi Profil bo‘limidan yangisini oling.",
-    hello: "Creator Hub bot. Buyurtma xabarlarini olish uchun saytdagi Profil → “Botni ulash” tugmasidan foydalaning.",
+    hello: "Creator Hub. Ilovani ochish uchun pastdagi tugmani bosing. Buyurtma xabarlarini olish uchun saytdagi Profil → “Botni ulash” tugmasidan foydalaning.",
     paidToClient: "✅ Mutaxassis to‘lovni tasdiqladi:",
     rejectedToClient: "❌ Mutaxassis to‘lov kelmaganini bildirdi:",
     expired: "Buyurtma muddati tugagan.",
+    open: "🚀 Creator Hub’ni ochish",
   },
   ru: {
     newOrder: "🆕 <b>Новый заказ!</b>",
@@ -71,6 +72,7 @@ export const TG_TEXT = {
     paidToClient: "✅ Специалист подтвердил оплату:",
     rejectedToClient: "❌ Специалист сообщил, что оплата не поступила:",
     expired: "Срок заказа истёк.",
+    open: "🚀 Открыть Creator Hub",
   },
 } as const;
 export type TgLang = keyof typeof TG_TEXT;

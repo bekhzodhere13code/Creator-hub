@@ -209,6 +209,11 @@ const uz = {
     phWorkTitle: "Masalan: Restoran uchun reklama roligi",
     phWorkDesc: "Qaysi mijoz uchun, nima qildingiz, natija qanday bo‘ldi.",
     phSearch: "Ism yoki xizmat bo‘yicha qidiring",
+    tgAppLoading: "Telegram orqali kirilmoqda…",
+    tgAppTitle: "Hisobingiz topilmadi",
+    tgAppNotLinked: "Bu Telegram hisobi saytdagi profilga ulanmagan. Avval saytda ro‘yxatdan o‘ting, so‘ng Profil → “Botni ulash” tugmasini bosing — keyin Mini App avtomatik ochiladi.",
+    tgAppOpenSite: "Saytda ro‘yxatdan o‘tish",
+    tgAppBrowser: "Bu sahifa Telegram ichida ochilishi kerak. Brauzerda oddiy kirishdan foydalaning.",
   },
   common: { loading: "Yuklanmoqda…", error: "Xatolik yuz berdi. Qayta urinib ko‘ring.", back: "Orqaga", sum: "so‘m", notFound: "Topilmadi", signInToContinue: "" },
   auth: {
@@ -426,6 +431,11 @@ const ru: Dict = {
     phWorkTitle: "Например: Рекламный ролик для ресторана",
     phWorkDesc: "Для какого клиента, что сделали, какой результат.",
     phSearch: "Поиск по имени или услуге",
+    tgAppLoading: "Вход через Telegram…",
+    tgAppTitle: "Аккаунт не найден",
+    tgAppNotLinked: "Этот Telegram не привязан к профилю на сайте. Сначала зарегистрируйтесь на сайте, затем нажмите Профиль → «Подключить бота» — после этого Mini App будет входить автоматически.",
+    tgAppOpenSite: "Зарегистрироваться на сайте",
+    tgAppBrowser: "Эта страница должна открываться внутри Telegram. В браузере используйте обычный вход.",
   },
   common: { loading: "Загрузка…", error: "Произошла ошибка. Попробуйте снова.", back: "Назад", sum: "сум", notFound: "Не найдено", signInToContinue: "" },
   auth: {

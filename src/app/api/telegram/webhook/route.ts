@@ -11,7 +11,10 @@ type Update = {
   callback_query?: { id: string; data?: string; from: { id: number }; message?: { chat: { id: number }; message_id: number } };
 };
 
+const openBtn = (origin: string, text: string) => ({ inline_keyboard: [[{ text, web_app: { url: `${origin}/tg` } }]] });
+
 export async function POST(req: Request) {
+  const origin = new URL(req.url).origin;
   const secret = process.env.TELEGRAM_WEBHOOK_SECRET;
   if (!secret || req.headers.get("x-telegram-bot-api-secret-token") !== secret) {
     return NextResponse.json({ ok: false }, { status: 401 });
@@ -30,12 +33,12 @@ export async function POST(req: Request) {
         if (prof) {
           await db.from("profiles").update({ tg_chat_id: null }).eq("tg_chat_id", chatId).neq("id", prof.id);
           await db.from("profiles").update({ tg_chat_id: chatId, tg_link_code: null }).eq("id", prof.id);
-          await tg("sendMessage", { chat_id: chatId, text: TG_TEXT[tgLang(prof.language)].linked });
+          await tg("sendMessage", { chat_id: chatId, text: TG_TEXT[tgLang(prof.language)].linked, reply_markup: openBtn(origin, TG_TEXT[tgLang(prof.language)].open) });
         } else {
           await tg("sendMessage", { chat_id: chatId, text: TG_TEXT.uz.badCode });
         }
       } else if (u.message.text.startsWith("/start")) {
-        await tg("sendMessage", { chat_id: chatId, text: TG_TEXT.uz.hello });
+        await tg("sendMessage", { chat_id: chatId, text: TG_TEXT.uz.hello, reply_markup: openBtn(origin, TG_TEXT.uz.open) });
       }
     }
 

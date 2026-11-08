@@ -1,7 +1,9 @@
 import type { Metadata, Viewport } from "next";
 import { Manrope, Syne } from "next/font/google";
 import { cookies } from "next/headers";
+import Script from "next/script";
 import { ClerkProvider } from "@clerk/nextjs";
+import { TgInit } from "@/components/tg-init";
 import { ruRU } from "@clerk/localizations";
 import { LangProvider } from "@/lib/i18n-client";
 import { isLang } from "@/lib/i18n";
@@ -26,7 +28,10 @@ export default async function RootLayout({ children }: { children: React.ReactNo
   return (
     <ClerkProvider signInUrl="/sign-in" signUpUrl="/sign-up" signInFallbackRedirectUrl="/" signUpFallbackRedirectUrl="/" appearance={clerkAppearance} localization={lang === "ru" ? ruRU : uzLocalization}>
       <html lang={lang} className={`${body.variable} ${display.variable}`}>
-        <body><LangProvider initial={lang}>{children}</LangProvider></body>
+        <body>
+          <Script src="https://telegram.org/js/telegram-web-app.js" strategy="beforeInteractive" />
+          <LangProvider initial={lang}><TgInit />{children}</LangProvider>
+        </body>
       </html>
     </ClerkProvider>
   );
