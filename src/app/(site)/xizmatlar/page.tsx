@@ -21,7 +21,7 @@ export default function ServicesPage() {
   return (
     <>
       <PageHead title={t.lists.servicesTitle} text={t.lists.servicesText} />
-      <input value={q} onChange={(e) => setQ(e.target.value)} placeholder={t.lists.search} className="field mb-4 max-w-sm" aria-label={t.lists.search} />
+      <input value={q} onChange={(e) => setQ(e.target.value)} placeholder={t.extra.phSearch} className="field mb-4 max-w-sm" aria-label={t.lists.search} />
       <div className="-mx-4 mb-5 flex gap-2 overflow-x-auto px-4 pb-1 sm:mx-0 sm:px-0">
         <button onClick={() => setCategory(null)} className={chip(!category)}>{t.lists.allCategories}</button>
         {CATEGORIES.map((c) => <button key={c} onClick={() => setCategory(c)} className={chip(category === c)}>{catLabel(t, c)}</button>)}

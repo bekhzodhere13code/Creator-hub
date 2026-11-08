@@ -14,7 +14,8 @@ export type Profile = {
   youtube: string | null;
   click_number: string | null; // faqat o‘z profilingiz uchun; boshqalarda null
   avatar_url: string | null;
-  work_area?: string | null; // qayerda ishlay olishi
+  work_area?: string | null;
+  account_type?: "client" | "creator" | null;
   has_click?: boolean; // boshqa foydalanuvchida Click raqami bor-yo‘qligi
   tg_linked?: boolean; // faqat o‘z profilingiz: Telegram bot ulanganmi
 };
@@ -29,6 +30,8 @@ export type Service = {
   status: string | null;
   image_url: string | null;
   created_at: string | null;
+  work_area?: string | null; // qayerda ishlay olishi
+  sold_count?: number; // tasdiqlangan buyurtmalar soni
 };
 
 export type ServiceWithOwner = Service & { owner: Pick<Profile, "id" | "first_name" | "last_name" | "avatar_url"> | null };

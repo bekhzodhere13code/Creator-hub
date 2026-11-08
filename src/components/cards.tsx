@@ -1,6 +1,6 @@
 import Image from "next/image";
 import Link from "next/link";
-import { Camera, Film, ImageIcon, MapPin, Palette, PenLine, Sparkles, TrendingUp } from "lucide-react";
+import { Camera, Film, Flame, ImageIcon, MapPin, Palette, PenLine, Sparkles, TrendingUp } from "lucide-react";
 import { Avatar } from "./avatar";
 import type { Dict } from "@/lib/i18n";
 import { fullName, formatPrice, gradientFor, type Profile, type ServiceWithOwner } from "@/lib/utils";
@@ -30,6 +30,12 @@ export function ServiceCard({ s, t, href }: { s: ServiceWithOwner; t: Dict; href
       <div className="flex flex-1 flex-col gap-2 p-4">
         {s.image_url && <h3 className="line-clamp-1 font-display text-base font-bold">{s.title}</h3>}
         <p className="line-clamp-2 text-sm text-ink-soft">{s.description}</p>
+        {(s.work_area || (s.sold_count ?? 0) > 0) && (
+          <p className="flex flex-wrap items-center gap-x-3 gap-y-1 text-xs font-medium text-ink-soft">
+            {s.work_area && <span className="inline-flex items-center gap-1"><MapPin className="h-3.5 w-3.5" /> {s.work_area}</span>}
+            {(s.sold_count ?? 0) > 0 && <span className="inline-flex items-center gap-1 text-emerald-700"><Flame className="h-3.5 w-3.5" /> {s.sold_count} {t.extra.sold}</span>}
+          </p>
+        )}
         <div className="mt-auto flex items-center justify-between gap-2 pt-2">
           {s.owner ? (
             <span className="flex min-w-0 items-center gap-2">

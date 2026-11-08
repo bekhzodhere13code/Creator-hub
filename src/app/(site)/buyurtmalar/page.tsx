@@ -8,7 +8,7 @@ import { formatPrice, fullName, type Order } from "@/lib/utils";
 export default function OrdersPage() {
   const { t } = useT();
   const { me, data, profile } = useStore();
-  const asOwner = data.orders.filter((o) => o.owner_id === me.id);
+  const asOwner = me.account_type === "client" ? [] : data.orders.filter((o) => o.owner_id === me.id);
   const asClient = data.orders.filter((o) => o.client_id === me.id);
 
   const Row = ({ o, other }: { o: Order; other: string }) => {
@@ -35,7 +35,7 @@ export default function OrdersPage() {
 
   return (
     <div className="mx-auto max-w-3xl space-y-8">
-      <PageHead title={t.order.title} />
+      <PageHead title={me.account_type === "client" ? t.extra.myOrders : t.order.title} />
       {!asClient.length && !asOwner.length && <Empty text={t.order.empty} />}
       {asOwner.length > 0 && (
         <section className="space-y-3">

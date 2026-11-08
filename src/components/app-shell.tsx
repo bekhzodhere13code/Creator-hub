@@ -23,14 +23,17 @@ export function AppShell({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
   const [open, setOpen] = useState(false);
 
-  const main = [
+  const client = user.account_type === "client";
+  const base = [
     { href: "/mobilograflar", label: t.nav.mobilografs, short: t.nav.mobilografs, Icon: Camera },
     { href: "/smm-mutaxassislari", label: t.nav.smm, short: "SMM", Icon: TrendingUp },
     { href: "/xizmatlar", label: t.nav.allServices, short: t.nav.allServices.split(" ").pop()!, Icon: LayoutGrid },
-    { href: "/mening-xizmatlarim", label: t.nav.myServices, short: t.nav.myServices.split(" ").pop()!, Icon: Briefcase },
-    { href: "/profil", label: t.nav.profile, short: t.nav.profile, Icon: User },
   ];
-  const all = [...main.slice(0, 4), { href: "/buyurtmalar", label: t.nav.orders, short: t.nav.orders, Icon: Receipt }, main[4]];
+  const profileItem = { href: "/profil", label: t.nav.profile, short: t.nav.profile, Icon: User };
+  const ordersItem = { href: "/buyurtmalar", label: client ? t.extra.myOrders : t.nav.orders, short: client ? t.extra.myOrders.split(" ").pop()! : t.nav.orders, Icon: Receipt };
+  const myServices = { href: "/mening-xizmatlarim", label: t.nav.myServices, short: t.nav.myServices.split(" ").pop()!, Icon: Briefcase };
+  const main = [...base, client ? ordersItem : myServices, profileItem];
+  const all = client ? main : [...base, myServices, ordersItem, profileItem];
   const isActive = (href: string) => pathname === href || (href !== "/" && pathname.startsWith(href + "/"));
 
   const NavLinks = ({ onNavigate }: { onNavigate?: () => void }) => (
@@ -44,7 +47,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
           className={cn("flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-semibold transition-colors", isActive(href) ? "bg-brand-50 text-brand" : "text-ink-soft hover:bg-slate-50 hover:text-ink")}
         >
           <Icon className="h-[18px] w-[18px]" /> <span className="flex-1">{label}</span>
-          {href === "/buyurtmalar" && pendingIn > 0 && <span className="rounded-full bg-brand px-2 py-0.5 text-[11px] font-bold text-white">{pendingIn}</span>}
+          {href === "/buyurtmalar" && !client && pendingIn > 0 && <span className="rounded-full bg-brand px-2 py-0.5 text-[11px] font-bold text-white">{pendingIn}</span>}
         </Link>
       ))}
     </nav>

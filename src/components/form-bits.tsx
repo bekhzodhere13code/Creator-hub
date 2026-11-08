@@ -1,6 +1,6 @@
 "use client";
 import { useState, useTransition } from "react";
-import { Instagram, Send, Youtube } from "lucide-react";
+import { Send } from "lucide-react";
 import { useT } from "@/lib/i18n-client";
 
 const MAX = 8 * 1024 * 1024;
@@ -46,22 +46,12 @@ export function Label({ text, hint, children }: { text: string; hint?: string; c
   );
 }
 
-export function SocialFields({ defaults }: { defaults: { instagram?: string | null; telegram?: string | null; youtube?: string | null } }) {
+export function SocialFields({ defaults }: { defaults: { telegram?: string | null } }) {
   const { t } = useT();
   return (
-    <div className="space-y-3">
-      <Label text={t.social.instagram}>
-        <span className="relative block"><Instagram className="pointer-events-none absolute left-3 top-3 h-4 w-4 text-ink-soft" />
-          <input name="instagram" defaultValue={defaults.instagram ?? ""} placeholder="https://instagram.com/username" className="field pl-9" /></span>
-      </Label>
-      <Label text={t.social.telegram}>
-        <span className="relative block"><Send className="pointer-events-none absolute left-3 top-3 h-4 w-4 text-ink-soft" />
-          <input name="telegram" defaultValue={defaults.telegram ?? ""} placeholder="@username" className="field pl-9" /></span>
-      </Label>
-      <Label text={t.social.youtube}>
-        <span className="relative block"><Youtube className="pointer-events-none absolute left-3 top-3 h-4 w-4 text-ink-soft" />
-          <input name="youtube" defaultValue={defaults.youtube ?? ""} placeholder="https://youtube.com/@kanal" className="field pl-9" /></span>
-      </Label>
-    </div>
+    <Label text={t.social.telegram}>
+      <span className="relative block"><Send className="pointer-events-none absolute left-3 top-3 h-4 w-4 text-ink-soft" />
+        <input name="telegram" defaultValue={defaults.telegram ?? ""} placeholder={t.extra.phTelegram} className="field pl-9" /></span>
+    </Label>
   );
 }

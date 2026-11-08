@@ -12,5 +12,6 @@ export async function GET(req: Request) {
   const hook = `${url.origin}/api/telegram/webhook`;
   const set = await tg("setWebhook", { url: hook, secret_token: secret, allowed_updates: ["message", "callback_query"], drop_pending_updates: true });
   const me = await tg<{ username: string }>("getMe", {});
-  return NextResponse.json({ webhook: hook, setWebhook: set, bot: me.ok ? me.result?.username : me });
+  const info = await tg("getWebhookInfo", {});
+  return NextResponse.json({ webhook: hook, setWebhook: set, bot: me.ok ? me.result?.username : me, info });
 }

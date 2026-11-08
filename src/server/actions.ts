@@ -34,10 +34,11 @@ const profileSchema = z.object({
   last_name: text(40),
   bio: text(500),
   work_area: text(120).nullish(),
+  account_type: z.enum(["client", "creator"]),
   click_number: z.string().trim().max(30).regex(/^[\d+ ]*$/).nullish(),
   specialties: z.array(z.enum(["mobilograf", "smm"])).max(2),
   avatar: dataUrl,
-});
+}).refine((v) => v.account_type === "client" || v.specialties.length > 0, { path: ["specialties"] });
 
 export async function saveProfileAction(input: z.input<typeof profileSchema>): Promise<Ok | Fail> {
   return wrap(async () => {
@@ -47,7 +48,8 @@ export async function saveProfileAction(input: z.input<typeof profileSchema>): P
     const cur = await ensureProfile(userId);
     const patch: Record<string, unknown> = {
       first_name: p.data.first_name, last_name: p.data.last_name, bio: p.data.bio, work_area: p.data.work_area?.trim() || null,
-      click_number: p.data.click_number?.trim() || null, specialties: [...new Set(p.data.specialties)],
+      click_number: p.data.account_type === "client" ? null : p.data.click_number?.trim() || null,
+      account_type: p.data.account_type, specialties: p.data.account_type === "client" ? [] : [...new Set(p.data.specialties)],
       updated_at: new Date().toISOString(),
     };
     if (p.data.avatar) {
@@ -61,9 +63,9 @@ export async function saveProfileAction(input: z.input<typeof profileSchema>): P
 }
 
 const socialsSchema = z.object({
-  instagram: z.string().max(200).nullable(),
-  telegram: z.string().max(200).nullable(),
-  youtube: z.string().max(200).nullable(),
+  instagram: z.string().max(200).nullish(),
+  telegram: z.string().max(200).nullish(),
+  youtube: z.string().max(200).nullish(),
 });
 
 export async function saveSocialsAction(input: z.input<typeof socialsSchema>): Promise<Ok | Fail> {
@@ -78,7 +80,11 @@ export async function saveSocialsAction(input: z.input<typeof socialsSchema>): P
     if (tgu && !/^https?:\/\/(www\.)?(t\.me|telegram\.me)\//i.test(tgu)) return { ok: false, error: "Telegram: havola noto‘g‘ri" };
     if (yt && !/^https?:\/\/(www\.|m\.)?youtube\.com\/|^https?:\/\/youtu\.be\//i.test(yt)) return { ok: false, error: "YouTube: havola noto‘g‘ri" };
     await ensureProfile(userId);
-    const { error } = await admin().from("profiles").update({ instagram: ig, telegram: tgu, youtube: yt, updated_at: new Date().toISOString() }).eq("id", userId);
+    const patch: Record<string, unknown> = { updated_at: new Date().toISOString() };
+    if (p.data.instagram !== undefined) patch.instagram = ig;
+    if (p.data.telegram !== undefined) patch.telegram = tgu;
+    if (p.data.youtube !== undefined) patch.youtube = yt;
+    const { error } = await admin().from("profiles").update(patch).eq("id", userId);
     if (error) throw error;
     return { ok: true };
   });
@@ -92,6 +98,7 @@ const serviceSchema = z.object({
   category: z.enum(CATEGORIES),
   price: z.number().int().positive().max(1_000_000_000).nullable(),
   status: z.enum(["active", "inactive"]),
+  work_area: text(120).nullish(),
   click_number: z.string().trim().max(30).regex(/^[\d+ ]*$/).nullish(),
   image: dataUrl,
 });
@@ -102,12 +109,13 @@ export async function saveServiceAction(input: z.input<typeof serviceSchema>): P
     const p = serviceSchema.safeParse(input);
     if (!p.success) return { ok: false, error: "Ma’lumotlarni tekshiring" };
     const prof = await ensureProfile(userId);
+    if (prof.account_type !== "creator") return { ok: false, error: "Xizmat qo‘shish faqat mutaxassislar uchun" };
     const db = admin();
     // Karta raqami: birinchi xizmatda majburiy (mijoz shu raqamga to‘laydi).
     const card = p.data.click_number?.trim() || prof.click_number || null;
     if (!card) return { ok: false, error: "Karta raqamini kiriting" };
     if (card !== prof.click_number) await db.from("profiles").update({ click_number: card }).eq("id", userId);
-    const row: Record<string, unknown> = { title: p.data.title, description: p.data.description, category: p.data.category, price: p.data.price, status: p.data.status };
+    const row: Record<string, unknown> = { title: p.data.title, description: p.data.description, category: p.data.category, price: p.data.price, status: p.data.status, work_area: p.data.work_area?.trim() || null };
     if (p.data.id) {
       const { data: cur } = await db.from("services").select("owner_id,image_url").eq("id", p.data.id).maybeSingle();
       if (!cur || cur.owner_id !== userId) return { ok: false, error: "Topilmadi" };

@@ -22,7 +22,7 @@ type Store = {
   withOwner: (s: Service) => ServiceWithOwner;
   refresh: () => void;
   saveProfile: (p: ProfileInput) => Promise<Res>;
-  saveSocials: (p: { instagram: string | null; telegram: string | null; youtube: string | null }) => Promise<Res>;
+  saveSocials: (p: { instagram?: string | null; telegram?: string | null; youtube?: string | null }) => Promise<Res>;
   saveService: (s: ServiceInput) => Promise<Res>;
   deleteService: (id: string) => Promise<Res>;
   addPortfolio: (p: PortfolioInput) => Promise<Res>;
@@ -63,7 +63,7 @@ export function StoreProvider({ snapshot, children }: { snapshot: AppSnapshot; c
         if (r.ok) router.refresh();
         return r;
       };
-    const orderErr: Record<string, string> = { notFound: t.common.notFound, own: t.service.own, noClick: t.service.noClick, profile: t.common.error, tooMany: t.common.error, failed: t.common.error };
+    const orderErr: Record<string, string> = { notFound: t.common.notFound, own: t.service.own, noClick: t.service.noClick, notClient: t.extra.creatorsView, profile: t.common.error, tooMany: t.common.error, failed: t.common.error };
     return {
       me, data, profile, withOwner, refresh,
       saveProfile: mut(saveProfileAction),

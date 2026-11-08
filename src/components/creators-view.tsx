@@ -15,7 +15,7 @@ export function CreatorsView({ specialty }: { specialty: Specialty }) {
   return (
     <>
       <PageHead title={head[0]} text={head[1]} />
-      <input value={q} onChange={(e) => setQ(e.target.value)} placeholder={t.lists.search} className="field mb-5 max-w-sm" aria-label={t.lists.search} />
+      <input value={q} onChange={(e) => setQ(e.target.value)} placeholder={t.extra.phSearch} className="field mb-5 max-w-sm" aria-label={t.lists.search} />
       {list.length ? <div className="grid gap-4 md:grid-cols-2">{list.map((p) => <CreatorCard key={p.id} p={p} t={t} />)}</div> : <Empty text={t.lists.emptyCreators} />}
     </>
   );

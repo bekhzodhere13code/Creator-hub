@@ -32,7 +32,7 @@ function orderMessage(lang: "uz" | "ru", o: { title: string | null; price: numbe
 
 export type CreateOrderResult =
   | { ok: true; id: string; notified: boolean }
-  | { ok: false; error: "notFound" | "own" | "noClick" | "tooMany" | "profile" | "failed" };
+  | { ok: false; error: "notFound" | "own" | "noClick" | "tooMany" | "profile" | "failed" | "notClient" };
 
 export async function createOrderFor(userId: string, serviceId: string): Promise<CreateOrderResult> {
   const db = admin();
@@ -46,6 +46,7 @@ export async function createOrderFor(userId: string, serviceId: string): Promise
   ]);
   if (!seller || !client) return { ok: false, error: "notFound" };
   if (!seller.click_number) return { ok: false, error: "noClick" };
+  if (client.account_type !== "client") return { ok: false, error: "notClient" };
   if (!((client.first_name ?? "").trim())) return { ok: false, error: "profile" };
 
   // Shu xizmatga ochiq buyurtma bor bo‘lsa, yangisini ochmaymiz.
