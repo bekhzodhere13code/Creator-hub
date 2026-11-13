@@ -1,79 +1,70 @@
 "use client";
 import Link from "next/link";
-import { ArrowRight, Camera, Flame, TrendingUp } from "lucide-react";
-import { CreatorCard, ServiceCard } from "./cards";
+import { Camera, LayoutGrid, TrendingUp } from "lucide-react";
+import { CAT_ICONS, CreatorCard, ServiceCard, catLabel } from "./cards";
+import { Hero } from "./hero";
+import { Item, Stagger } from "./motion";
 import { useT } from "@/lib/i18n-client";
 import { useStore } from "@/lib/store";
+import { CATEGORIES } from "@/lib/utils";
 
 export function HomeView() {
   const { t } = useT();
   const { me, data, withOwner } = useStore();
-  const services = data.services.filter((s) => s.status === "active").sort((a, b) => (b.created_at ?? "").localeCompare(a.created_at ?? "")).slice(0, 6).map(withOwner);
-  const top = data.services.filter((s) => s.status === "active" && (s.sold_count ?? 0) > 0).sort((a, b) => (b.sold_count ?? 0) - (a.sold_count ?? 0)).slice(0, 3).map(withOwner);
+  const active = data.services.filter((s) => s.status === "active");
+  const services = [...active].sort((a, b) => (b.created_at ?? "").localeCompare(a.created_at ?? "")).slice(0, 6).map(withOwner);
   const creators = data.profiles.filter((p) => p.id !== me.id && (p.specialties?.length ?? 0) > 0).slice(0, 4);
+  const countOf = (sp: string) => data.profiles.filter((p) => p.specialties?.includes(sp)).length;
 
   return (
     <div className="space-y-12">
-      <section className="relative overflow-hidden rounded-3xl bg-[#0A0A1F] p-6 text-white sm:p-10">
-        <div className="pointer-events-none absolute -right-24 -top-24 h-72 w-72 rounded-full bg-brand/50 blur-3xl" aria-hidden="true" />
-        <div className="pointer-events-none absolute -bottom-32 left-1/3 h-64 w-64 rounded-full bg-[#FF6B6B]/25 blur-3xl" aria-hidden="true" />
-        <div className="relative max-w-2xl">
-          <span className="inline-block rounded-full bg-white/10 px-3 py-1 text-xs font-semibold">{t.home.badge}</span>
-          <h1 className="mt-4 text-balance text-3xl font-extrabold leading-[1.05] sm:text-5xl">{me.account_type === "client" ? t.extra.clientHome : t.home.title}</h1>
-          <p className="mt-4 max-w-lg text-sm leading-relaxed text-slate-300 sm:text-base">{t.home.text}</p>
-          <div className="mt-7">
-            <Link href="/xizmatlar" className="btn bg-white text-ink hover:bg-slate-100">{t.home.browse} <ArrowRight className="h-4 w-4" /></Link>
-          </div>
-        </div>
-        <div className="relative mt-8 grid gap-3 sm:grid-cols-2">
-          <Link href="/mobilograflar" className="flex items-center gap-3 rounded-2xl bg-white/10 p-4 transition-colors hover:bg-white/15">
-            <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-white/15"><Camera className="h-5 w-5" /></span>
-            <span className="font-display font-bold">{t.nav.mobilografs}</span>
-          </Link>
-          <Link href="/smm-mutaxassislari" className="flex items-center gap-3 rounded-2xl bg-white/10 p-4 transition-colors hover:bg-white/15">
-            <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-white/15"><TrendingUp className="h-5 w-5" /></span>
-            <span className="font-display font-bold">{t.nav.smm}</span>
-          </Link>
-        </div>
-      </section>
+      <Hero
+        primary={{ href: "/xizmatlar", label: t.home.browse }}
+        tiles={[
+          { href: "/mobilograflar", label: t.nav.mobilografs, Icon: Camera, count: countOf("mobilograf") },
+          { href: "/smm-mutaxassislari", label: t.nav.smm, Icon: TrendingUp, count: countOf("smm") },
+          { href: "/xizmatlar", label: t.nav.allServices, Icon: LayoutGrid, count: active.length },
+        ]}
+      />
 
-      {top.length > 0 && (
-        <section className="rounded-3xl bg-gradient-to-br from-brand-50 to-white p-4 ring-1 ring-brand/10 sm:p-6">
-          <div className="mb-4 flex items-center gap-3">
-            <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-brand text-white"><Flame className="h-5 w-5" /></span>
-            <div>
-              <h2 className="text-xl font-extrabold sm:text-2xl">{t.extra.topSold}</h2>
-              <p className="text-sm text-ink-soft">{t.extra.topSoldText}</p>
-            </div>
-          </div>
-          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">{top.map((s) => <ServiceCard key={s.id} s={s} t={t} />)}</div>
-        </section>
-      )}
+      <div className="no-scrollbar -mx-4 -mt-6 flex gap-2 overflow-x-auto px-4 pb-1 sm:mx-0 sm:px-0">
+        {CATEGORIES.map((c) => {
+          const Icon = CAT_ICONS[c];
+          return (
+            <Link key={c} href={`/xizmatlar?c=${c}`} className="card card-hover inline-flex shrink-0 items-center gap-2 !rounded-full px-4 py-2 text-sm font-semibold">
+              <Icon className="h-4 w-4 text-brand" aria-hidden="true" />{catLabel(t, c)}
+            </Link>
+          );
+        })}
+      </div>
 
       <section>
         <div className="mb-4 flex items-center justify-between">
           <h2 className="text-xl font-extrabold sm:text-2xl">{t.home.latest}</h2>
           <Link href="/xizmatlar" className="text-sm font-semibold text-brand hover:underline">{t.home.seeAll}</Link>
         </div>
-        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">{services.map((s) => <ServiceCard key={s.id} s={s} t={t} />)}</div>
+        <Stagger className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">{services.map((s) => <Item key={s.id}><ServiceCard s={s} t={t} /></Item>)}</Stagger>
       </section>
 
       <section>
         <h2 className="mb-4 text-xl font-extrabold sm:text-2xl">{t.home.creators}</h2>
-        <div className="grid gap-4 md:grid-cols-2">{creators.map((p) => <CreatorCard key={p.id} p={p} t={t} />)}</div>
+        <Stagger className="grid gap-4 md:grid-cols-2">{creators.map((p) => <Item key={p.id}><CreatorCard p={p} t={t} /></Item>)}</Stagger>
       </section>
 
       <section>
         <h2 className="mb-4 text-xl font-extrabold sm:text-2xl">{t.home.howTitle}</h2>
-        <ol className="grid gap-4 md:grid-cols-3">
+        <Stagger className="grid gap-4 md:grid-cols-3">
           {t.home.how.map((s, i) => (
-            <li key={s.t} className="card p-5">
-              <span className="flex h-8 w-8 items-center justify-center rounded-full bg-brand text-sm font-bold text-white">{i + 1}</span>
-              <h3 className="mt-3 font-display text-base font-bold">{s.t}</h3>
-              <p className="mt-1 text-sm text-ink-soft">{s.d}</p>
-            </li>
+            <Item key={s.t}>
+              <div className="card card-hover relative h-full overflow-hidden p-5">
+                <span className="pointer-events-none absolute -right-2 -top-4 font-display text-7xl font-extrabold text-brand/[0.07]" aria-hidden="true">{i + 1}</span>
+                <span className="flex h-9 w-9 items-center justify-center rounded-full bg-brand text-sm font-bold text-white shadow-md shadow-brand/30">{i + 1}</span>
+                <h3 className="mt-3 font-display text-base font-bold">{s.t}</h3>
+                <p className="mt-1 text-sm text-ink-soft">{s.d}</p>
+              </div>
+            </Item>
           ))}
-        </ol>
+        </Stagger>
       </section>
     </div>
   );

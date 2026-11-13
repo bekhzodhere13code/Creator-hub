@@ -1,6 +1,7 @@
-export const LANGS = ["uz", "ru"] as const;
+import { en } from "./i18n-en";
+export const LANGS = ["uz", "ru", "en"] as const;
 export type Lang = (typeof LANGS)[number];
-export const isLang = (v: unknown): v is Lang => v === "uz" || v === "ru";
+export const isLang = (v: unknown): v is Lang => v === "uz" || v === "ru" || v === "en";
 
 const uz = {
   nav: {
@@ -86,8 +87,8 @@ const uz = {
     saving: "Saqlanmoqda…",
   },
   social: {
-    title: "Telegram’ni ulang",
-    text: "Iltimos, mijozlar siz bilan bog‘lanishi uchun Telegram’ingizni ulang!",
+    title: "Ijtimoiy tarmoqlarni ulang",
+    text: "Iltimos, bog‘lanish va ishlaringizni ko‘rsatish uchun Instagram, Telegram va YouTube kanalingizni ulang!",
     skip: "Keyinroq",
     save: "Saqlash va davom etish",
     instagram: "Instagram havolasi",
@@ -183,39 +184,11 @@ const uz = {
     retry: "Qayta urinish",
     landingCta: "Boshlash",
   },
-  extra: {
-    clientTitle: "Mijoz",
-    clientText: "Xizmatlarni ko‘raman va sotib olaman",
-    creatorText: "Xizmat sotaman va ishlarimni ko‘rsataman",
-    chooseHint: "Mutaxassislar xizmatlarni faqat ko‘ra oladi, sotib olish uchun mijoz hisobi kerak.",
-    creatorsView: "Mutaxassislar xizmatlarni faqat ko‘ra oladi. Sotib olish uchun mijoz hisobi kerak.",
-    sold: "marta sotilgan",
-    workArea: "Qayerda ishlay olasiz?",
-    workAreaHint: "Shahar, viloyat yoki “masofaviy”",
-    workAreaPh: "Masalan: Toshkent, Samarqand yoki masofaviy",
-    topSold: "Eng ko‘p sotib olingan xizmatlar",
-    topSoldText: "Mijozlar eng ko‘p tanlagan xizmatlar",
-    myOrders: "Buyurtmalarim",
-    tgNeed: "Mijoz to‘lov qilganda xabar Telegram’ingizga keladi. Botni ulang!",
-    clientHome: "Mutaxassis toping va buyurtma bering",
-    phFirst: "Masalan: Aziz",
-    phLast: "Masalan: Karimov",
-    phBio: "Masalan: 3 yildan beri Toshkentda mobilografman. Reels, mahsulot va tadbir videolari suratga olaman.",
-    phTitle: "Masalan: Instagram uchun 10 ta Reels video",
-    phDesc: "Nimalar kiradi, necha kunda tayyor bo‘ladi, qanday natija olasiz — qisqa va aniq yozing.",
-    phPrice: "Masalan: 500000",
-    phCard: "8600 1234 5678 9012",
-    phTelegram: "@username",
-    phWorkTitle: "Masalan: Restoran uchun reklama roligi",
-    phWorkDesc: "Qaysi mijoz uchun, nima qildingiz, natija qanday bo‘ldi.",
-    phSearch: "Ism yoki xizmat bo‘yicha qidiring",
-    tgAppLoading: "Telegram orqali kirilmoqda…",
-    tgAppTitle: "Hisobingiz topilmadi",
-    tgAppNotLinked: "Telegram orqali kirib bo‘lmadi. Qayta urinib ko‘ring yoki saytda ro‘yxatdan o‘ting.",
-    tgAppOpenSite: "Saytda ro‘yxatdan o‘tish",
-    tgAppBrowser: "Bu sahifa Telegram ichida ochilishi kerak. Brauzerda oddiy kirishdan foydalaning.",
-  },
   common: { loading: "Yuklanmoqda…", error: "Xatolik yuz berdi. Qayta urinib ko‘ring.", back: "Orqaga", sum: "so‘m", notFound: "Topilmadi", signInToContinue: "" },
+  extra: {
+    contactNav: "Aloqa", contactTitle: "Biz bilan aloqa", contactText: "Savol, taklif yoki muammo bo‘lsa, shu yerdan yozing — tez javob beramiz.",
+    telegram: "Telegram", email: "Elektron pochta", contactCreator: "Ijodkor bilan bog‘lanish", theme: "Mavzu", light: "Kunduzgi", dark: "Tungi", notSet: "Hozircha ko‘rsatilmagan",
+  },
   auth: {
     heading: "Mutaxassislar va portfoliolar sizni kutmoqda",
     points: ["Mobilograf va SMM mutaxassislarini qidiring", "Click orqali tez to‘lov", "Buyurtma Telegram’ga darhol keladi"],
@@ -308,8 +281,8 @@ const ru: Dict = {
     saving: "Сохранение…",
   },
   social: {
-    title: "Подключите Telegram",
-    text: "Пожалуйста, подключите Telegram, чтобы клиенты могли с вами связаться!",
+    title: "Подключите соцсети",
+    text: "Пожалуйста, подключите Instagram, Telegram и YouTube, чтобы с вами могли связаться и увидеть ваши работы!",
     skip: "Позже",
     save: "Сохранить и продолжить",
     instagram: "Ссылка на Instagram",
@@ -405,43 +378,18 @@ const ru: Dict = {
     retry: "Повторить",
     landingCta: "Начать",
   },
-  extra: {
-    clientTitle: "Клиент",
-    clientText: "Смотрю услуги и покупаю",
-    creatorText: "Продаю услуги и показываю работы",
-    chooseHint: "Специалисты могут только смотреть услуги, для покупки нужен аккаунт клиента.",
-    creatorsView: "Специалисты могут только смотреть услуги. Для покупки нужен аккаунт клиента.",
-    sold: "раз куплено",
-    workArea: "Где вы можете работать?",
-    workAreaHint: "Город, область или «удалённо»",
-    workAreaPh: "Например: Ташкент, Самарканд или удалённо",
-    topSold: "Самые покупаемые услуги",
-    topSoldText: "Услуги, которые клиенты выбирают чаще всего",
-    myOrders: "Мои заказы",
-    tgNeed: "Когда клиент оплатит, сообщение придёт в ваш Telegram. Подключите бота!",
-    clientHome: "Найдите специалиста и закажите услугу",
-    phFirst: "Например: Азиз",
-    phLast: "Например: Каримов",
-    phBio: "Например: 3 года работаю мобилографом в Ташкенте. Снимаю Reels, товары и мероприятия.",
-    phTitle: "Например: 10 видео Reels для Instagram",
-    phDesc: "Что входит, за сколько дней будет готово, какой результат — коротко и чётко.",
-    phPrice: "Например: 500000",
-    phCard: "8600 1234 5678 9012",
-    phTelegram: "@username",
-    phWorkTitle: "Например: Рекламный ролик для ресторана",
-    phWorkDesc: "Для какого клиента, что сделали, какой результат.",
-    phSearch: "Поиск по имени или услуге",
-    tgAppLoading: "Вход через Telegram…",
-    tgAppTitle: "Аккаунт не найден",
-    tgAppNotLinked: "Этот Telegram не привязан к профилю на сайте. Сначала зарегистрируйтесь на сайте, затем нажмите Профиль → «Подключить бота» — после этого Mini App будет входить автоматически.",
-    tgAppOpenSite: "Зарегистрироваться на сайте",
-    tgAppBrowser: "Эта страница должна открываться внутри Telegram. В браузере используйте обычный вход.",
-  },
   common: { loading: "Загрузка…", error: "Произошла ошибка. Попробуйте снова.", back: "Назад", sum: "сум", notFound: "Не найдено", signInToContinue: "" },
+  extra: {
+    contactNav: "Контакты", contactTitle: "Связаться с нами", contactText: "Есть вопрос, предложение или проблема — напишите нам, мы быстро ответим.",
+    telegram: "Telegram", email: "Эл. почта", contactCreator: "Связаться с автором", theme: "Тема", light: "Светлая", dark: "Тёмная", notSet: "Пока не указано",
+  },
   auth: {
     heading: "Специалисты и портфолио ждут вас",
     points: ["Ищите мобилографов и SMM-специалистов", "Быстрая оплата через Click", "Заказ сразу приходит в Telegram"],
   },
 };
 
-export const DICTS: Record<Lang, Dict> = { uz, ru };
+export const DICTS: Record<Lang, Dict> = { uz, ru, en };
+
+/** Qisqa 3 tilli matn tanlagich (xatolik xabarlari uchun). */
+export const L3 = (lang: Lang, uzT: string, ruT: string, enT: string) => (lang === "ru" ? ruT : lang === "en" ? enT : uzT);

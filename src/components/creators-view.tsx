@@ -1,6 +1,7 @@
 "use client";
 import { useState } from "react";
-import { CreatorCard, Empty, PageHead } from "./cards";
+import { CreatorCard, Empty, PageHead, SearchBox } from "./cards";
+import { Item, Stagger } from "./motion";
 import { useT } from "@/lib/i18n-client";
 import { useStore } from "@/lib/store";
 import { fullName, type Specialty } from "@/lib/utils";
@@ -15,8 +16,8 @@ export function CreatorsView({ specialty }: { specialty: Specialty }) {
   return (
     <>
       <PageHead title={head[0]} text={head[1]} />
-      <input value={q} onChange={(e) => setQ(e.target.value)} placeholder={t.extra.phSearch} className="field mb-5 max-w-sm" aria-label={t.lists.search} />
-      {list.length ? <div className="grid gap-4 md:grid-cols-2">{list.map((p) => <CreatorCard key={p.id} p={p} t={t} />)}</div> : <Empty text={t.lists.emptyCreators} />}
+      <SearchBox value={q} onChange={setQ} placeholder={t.lists.search} clearLabel={t.nav.close} className="mb-5 max-w-sm" />
+      {list.length ? <Stagger key={s} className="grid gap-4 md:grid-cols-2">{list.map((p) => <Item key={p.id}><CreatorCard p={p} t={t} /></Item>)}</Stagger> : <Empty text={t.lists.emptyCreators} />}
     </>
   );
 }

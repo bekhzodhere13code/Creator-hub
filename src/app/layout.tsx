@@ -1,14 +1,8 @@
 import type { Metadata, Viewport } from "next";
 import { Manrope, Syne } from "next/font/google";
 import { cookies } from "next/headers";
-import Script from "next/script";
-import { ClerkProvider } from "@clerk/nextjs";
-import { TgInit } from "@/components/tg-init";
-import { ruRU } from "@clerk/localizations";
 import { LangProvider } from "@/lib/i18n-client";
 import { isLang } from "@/lib/i18n";
-import { clerkAppearance } from "@/lib/clerk-appearance";
-import { uzLocalization } from "@/lib/clerk-uz";
 import "./globals.css";
 
 const body = Manrope({ subsets: ["latin", "latin-ext"], variable: "--font-body" });
@@ -26,13 +20,9 @@ export default async function RootLayout({ children }: { children: React.ReactNo
   const c = (await cookies()).get("lang")?.value;
   const lang = isLang(c) ? c : "uz";
   return (
-    <ClerkProvider signInUrl="/sign-in" signUpUrl="/sign-up" signInFallbackRedirectUrl="/" signUpFallbackRedirectUrl="/" appearance={clerkAppearance} localization={lang === "ru" ? ruRU : uzLocalization}>
-      <html lang={lang} className={`${body.variable} ${display.variable}`}>
-        <body>
-          <Script src="https://telegram.org/js/telegram-web-app.js" strategy="beforeInteractive" />
-          <LangProvider initial={lang}><TgInit />{children}</LangProvider>
-        </body>
-      </html>
-    </ClerkProvider>
+    <html lang={lang} suppressHydrationWarning className={`${body.variable} ${display.variable}`}>
+        <head><script dangerouslySetInnerHTML={{ __html: "try{var t=localStorage.getItem('theme');if(t==='dark'||(!t&&matchMedia('(prefers-color-scheme: dark)').matches))document.documentElement.classList.add('dark')}catch(e){}" }} /></head>
+        <body><LangProvider initial={lang}>{children}</LangProvider></body>
+    </html>
   );
 }

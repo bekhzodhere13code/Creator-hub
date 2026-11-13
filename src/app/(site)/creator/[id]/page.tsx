@@ -22,6 +22,7 @@ export default function CreatorPage() {
     { href: p.telegram, Icon: Send, label: "Telegram" },
     { href: p.youtube, Icon: Youtube, label: "YouTube" },
   ].filter((l) => l.href);
+  const contact = p.telegram ?? p.instagram ?? null;
 
   return (
     <div className="space-y-8">
@@ -44,7 +45,7 @@ export default function CreatorPage() {
             </div>
           )}
         </div>
-        {me.id === p.id && <Link href="/profil" className="btn btn-primary self-start">{t.my.edit}</Link>}
+        {me.id === p.id ? <Link href="/profil" className="btn btn-primary self-start">{t.my.edit}</Link> : contact && <a href={contact} target="_blank" rel="noopener noreferrer" className="btn btn-primary self-start"><Send className="h-4 w-4" /> {t.extra.contactCreator}</a>}
       </section>
 
       <section>

@@ -1,0 +1,75 @@
+import type { Dict } from "./i18n";
+
+export const en: Dict = {
+  nav: { mobilografs: "Mobile creators", smm: "SMM specialists", allServices: "All services", myServices: "My services", orders: "Orders", profile: "Profile", signIn: "Sign in", signUp: "Sign up", signOut: "Sign out", menu: "Menu", close: "Close", home: "Creator Hub home" },
+  home: {
+    badge: "For creators in Uzbekistan",
+    title: "Find a mobile creator or SMM specialist in one place",
+    text: "Browse portfolios, pick a service, pay via Click and talk directly on Telegram.",
+    cta: "Get started", browse: "Browse services", latest: "New services", creators: "Creators", seeAll: "See all", howTitle: "How it works",
+    how: [
+      { t: "Pick a service", d: "Find the right mobile creator or SMM specialist in the catalog." },
+      { t: "Order and pay", d: "Transfer to the creator’s Click number — they get a Telegram message right away." },
+      { t: "Chat once confirmed", d: "When the creator confirms payment, the Telegram link opens." },
+    ],
+    welcome: "Hello",
+  },
+  lists: {
+    mobilografsTitle: "Mobile creators", mobilografsText: "Specialists in mobile content creation",
+    smmTitle: "SMM specialists", smmText: "Specialists in social media marketing",
+    servicesTitle: "All services", servicesText: "Active services from all creators",
+    emptyCreators: "No specialists yet.", emptyServices: "No services yet.", search: "Search…", allCategories: "All",
+  },
+  categories: { mobilografiya: "Mobile content", foto: "Photo", smm: "SMM", kontent: "Content", montaj: "Editing", dizayn: "Design", boshqa: "Other" },
+  specialty: { mobilograf: "Mobile creator", smm: "SMM specialist" },
+  service: { priceFrom: "UZS", negotiable: "Negotiable", by: "Author", order: "Buy", own: "This is your service", inactive: "Inactive", active: "Active", signInToOrder: "Sign in to order", noClick: "The creator hasn’t added a Click number yet" },
+  my: {
+    title: "My services", add: "Add service", edit: "Edit", delete: "Delete", confirmDelete: "Delete this service?", empty: "You haven’t added any services yet.",
+    formTitle: "Service", fTitle: "Title", fDesc: "Description", fCategory: "Category", fPrice: "Price (UZS)", fImage: "Image (optional)", fActive: "Active (visible to everyone)",
+    save: "Save", cancel: "Cancel", saving: "Saving…",
+  },
+  social: {
+    title: "Connect your social networks",
+    text: "Please connect your Instagram, Telegram and YouTube so clients can reach you and see your work!",
+    skip: "Later", save: "Save and continue", instagram: "Instagram link", telegram: "Telegram (@username or link)", youtube: "YouTube channel link",
+  },
+  profile: {
+    title: "Profile", editTitle: "Edit profile", firstName: "First name", lastName: "Last name", bio: "About you", specialties: "Specialty (you can pick several)",
+    click: "Click card or phone number", clickHint: "Clients will send payment to this number", workArea: "Where can you work?",
+    workAreaHint: "City or region, e.g. Tashkent, Samarkand or remote", avatar: "Profile photo (optional)",
+    avatarHint: "If you don’t upload a photo, an avatar is made from your initials.", save: "Save", saved: "Saved", links: "Links", portfolio: "Portfolio", services: "Services",
+    noPortfolio: "Portfolio is empty.", addWork: "Add work", workTitle: "Work title", workDesc: "Short description", workYoutube: "YouTube video link", deleteWork: "Delete",
+    viewPublic: "View public profile", tgBot: "Telegram notifications", tgBotText: "Connect the bot to get notified about new orders.",
+    tgConnected: "Bot connected — orders will arrive on Telegram.", tgConnect: "Connect bot", tgNotConfigured: "The bot isn’t set up yet (an admin must add TELEGRAM_BOT_TOKEN).",
+    notFound: "Profile not found",
+  },
+  order: {
+    title: "Orders", asClient: "My orders", asOwner: "Orders for me", empty: "No orders.", payTitle: "Order", step1: "Transfer the payment to this Click number:",
+    amount: "Amount", copy: "Copy", copied: "Copied", contact: "Contact", openTelegram: "Message on Telegram", noTelegram: "Telegram not provided", client: "Client", creator: "Specialist",
+    notFound: "Order not found", waitingTitle: "The specialist is checking your payment…",
+    waitingText: "The specialist was notified on Telegram. This page updates itself when they confirm “Paid”.",
+    successTitle: "Payment confirmed!", successText: "Taking you home…", goHome: "Go home", rejectedTitle: "Payment not confirmed",
+    rejectedText: "The specialist said the payment didn’t arrive. Check the payment and order again.", expiredTitle: "Order expired", cancelledTitle: "Order cancelled",
+    cancel: "Cancel order", confirmCancel: "Cancel this order?", sPending: "Pending", sConfirmed: "Paid", sRejected: "Not paid", sExpired: "Expired", sCancelled: "Cancelled",
+    sellerAsk: "Did the client pay?", confirmBtn: "Paid", rejectBtn: "Not paid", tgSent: "The specialist was notified on Telegram",
+    tgNotLinked: "The specialist hasn’t connected the Telegram bot — they will see the order under “Orders” on the site.",
+    pendingBadge: "New", sNew: "Awaiting payment", iPaid: "Paid",
+    newHint: "After paying, press “Paid” — the specialist will be notified on Telegram.",
+    sellerNew: "The client hasn’t paid yet. You’ll be notified when they press “Paid”.",
+  },
+  onboard: {
+    title: "Who are you?", text: "Choose your specialty — you can pick several. You can change it later in your profile.", start: "Start", skip: "Skip for now", unlink: "Disconnect",
+    tgHint: "After the bot opens, press “Start”, then come back here and refresh the page.", backendTitle: "Backend not configured",
+    backendText: "Server keys (SUPABASE_SERVICE_ROLE_KEY) haven’t been added yet.", errorTitle: "Couldn’t load data", errorText: "Please refresh the page in a moment.",
+    retry: "Try again", landingCta: "Get started",
+  },
+  common: { loading: "Loading…", error: "Something went wrong. Please try again.", back: "Back", sum: "UZS", notFound: "Not found", signInToContinue: "" },
+  extra: {
+    contactNav: "Contact", contactTitle: "Contact us", contactText: "Have a question, idea or problem? Write to us — we’ll reply quickly.",
+    telegram: "Telegram", email: "Email", contactCreator: "Contact creator", theme: "Theme", light: "Light", dark: "Dark", notSet: "Not provided yet",
+  },
+  auth: {
+    heading: "Specialists and portfolios are waiting for you",
+    points: ["Search for mobile creators and SMM specialists", "Fast payment via Click", "Orders reach Telegram instantly"],
+  },
+};

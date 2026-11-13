@@ -32,7 +32,7 @@ function orderMessage(lang: "uz" | "ru", o: { title: string | null; price: numbe
 
 export type CreateOrderResult =
   | { ok: true; id: string; notified: boolean }
-  | { ok: false; error: "notFound" | "own" | "noClick" | "tooMany" | "profile" | "failed" | "notClient" };
+  | { ok: false; error: "notFound" | "own" | "noClick" | "tooMany" | "profile" | "failed" };
 
 export async function createOrderFor(userId: string, serviceId: string): Promise<CreateOrderResult> {
   const db = admin();
@@ -46,7 +46,6 @@ export async function createOrderFor(userId: string, serviceId: string): Promise
   ]);
   if (!seller || !client) return { ok: false, error: "notFound" };
   if (!seller.click_number) return { ok: false, error: "noClick" };
-  if (client.account_type !== "client") return { ok: false, error: "notClient" };
   if (!((client.first_name ?? "").trim())) return { ok: false, error: "profile" };
 
   // Shu xizmatga ochiq buyurtma bor bo‘lsa, yangisini ochmaymiz.
@@ -58,7 +57,7 @@ export async function createOrderFor(userId: string, serviceId: string): Promise
 
   const { data: order, error } = await db
     .from("orders")
-    .insert({ service_id: s.id, service_title: s.title, price: s.price, client_id: userId, owner_id: s.owner_id, status: "new" })
+    .insert({ service_id: s.id, service_title: s.title, price: s.price, client_id: userId, owner_id: s.owner_id, status: "pending" })
     .select("id")
     .single();
   if (error || !order) { console.error("[orders] insert", error); return { ok: false, error: "failed" }; }
@@ -95,7 +94,6 @@ export async function markOrderPaidFor(clientId: string, orderId: string): Promi
       reply_markup: { inline_keyboard: [[{ text: T.yes, callback_data: `o:${orderId}:y` }, { text: T.no, callback_data: `o:${orderId}:n` }]] },
     });
     notified = r.ok;
-    if (!r.ok) console.error("[telegram] sendMessage failed", JSON.stringify(r));
     if (r.ok && r.result?.message_id) await db.from("orders").update({ tg_message_id: r.result.message_id }).eq("id", orderId);
   }
   return { ok: true, notified };
@@ -122,7 +120,7 @@ export async function decideOrderFor(sellerId: string, orderId: string, yes: boo
   // Telegramdagi xabarni yangilash va mijozga xabar berish (bot ulangan bo‘lsa).
   if (telegramEnabled()) {
     const [{ data: seller }, { data: client }] = await Promise.all([
-      db.from("profiles").select("tg_chat_id, language, telegram").eq("id", sellerId).maybeSingle(),
+      db.from("profiles").select("tg_chat_id, language").eq("id", sellerId).maybeSingle(),
       db.from("profiles").select("tg_chat_id, language").eq("id", o.client_id).maybeSingle(),
     ]);
     if (seller?.tg_chat_id && o.tg_message_id) {
@@ -135,8 +133,7 @@ export async function decideOrderFor(sellerId: string, orderId: string, yes: boo
     }
     if (client?.tg_chat_id) {
       const T = TG_TEXT[tgLang(client.language)];
-      const link = yes ? normalizeUrl(seller?.telegram, "telegram") : null;
-      await tg("sendMessage", { chat_id: client.tg_chat_id, text: `${yes ? T.paidToClient : T.rejectedToClient} ${o.service_title ?? ""}${link ? `\n✈️ ${link}` : ""}` });
+      await tg("sendMessage", { chat_id: client.tg_chat_id, text: `${yes ? T.paidToClient : T.rejectedToClient} ${o.service_title ?? ""}` });
     }
   }
   return { ok: true, status };

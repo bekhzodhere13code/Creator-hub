@@ -8,6 +8,7 @@ import { PortfolioGrid } from "./portfolio";
 import { useSocialsAction } from "./service-manager";
 import { readImage } from "@/lib/image";
 import { useT } from "@/lib/i18n-client";
+import { L3 } from "@/lib/i18n";
 import { useStore } from "@/lib/store";
 import { SPECIALTIES, youtubeId } from "@/lib/utils";
 
@@ -16,17 +17,15 @@ export function ProfileForm() {
   const { me, saveProfile } = useStore();
   const { pending, error, saved, submit } = useFormAction(async (fd) => {
     const first = String(fd.get("first_name") ?? "").trim();
-    if (first.length < 2) return { ok: false, error: lang === "ru" ? "Введите имя" : "Ismni kiriting" };
+    if (first.length < 2) return { ok: false, error: L3(lang, "Ismni kiriting", "Введите имя", "Enter your first name") };
     const avatar = await readImage(fd.get("avatar"), 480);
-    const client = me.account_type === "client";
     return saveProfile({
-      account_type: client ? "client" : "creator",
       first_name: first,
       last_name: String(fd.get("last_name") ?? "").trim(),
       bio: String(fd.get("bio") ?? "").trim(),
-      work_area: me.work_area ?? null,
-      click_number: client ? null : String(fd.get("click_number") ?? "").replace(/[^\d+ ]/g, "").trim() || null,
-      specialties: client ? [] : fd.getAll("specialties").map(String).filter((s) => s === "mobilograf" || s === "smm"),
+      work_area: String(fd.get("work_area") ?? "").trim() || null,
+      click_number: String(fd.get("click_number") ?? "").replace(/[^\d+ ]/g, "").trim() || null,
+      specialties: fd.getAll("specialties").map(String).filter((s) => s === "mobilograf" || s === "smm"),
       avatar,
     });
   });
@@ -39,10 +38,10 @@ export function ProfileForm() {
         </Label>
       </div>
       <div className="grid gap-4 sm:grid-cols-2">
-        <Label text={t.profile.firstName}><input name="first_name" required maxLength={40} defaultValue={me.first_name ?? ""} placeholder={t.extra.phFirst} className="field" /></Label>
-        <Label text={t.profile.lastName}><input name="last_name" maxLength={40} defaultValue={me.last_name ?? ""} placeholder={t.extra.phLast} className="field" /></Label>
+        <Label text={t.profile.firstName}><input name="first_name" required maxLength={40} defaultValue={me.first_name ?? ""} className="field" /></Label>
+        <Label text={t.profile.lastName}><input name="last_name" maxLength={40} defaultValue={me.last_name ?? ""} className="field" /></Label>
       </div>
-      {me.account_type !== "client" && <fieldset>
+      <fieldset>
         <legend className="mb-1.5 text-sm font-semibold">{t.profile.specialties}</legend>
         <div className="flex flex-wrap gap-2">
           {SPECIALTIES.map((s) => (
@@ -52,9 +51,10 @@ export function ProfileForm() {
             </label>
           ))}
         </div>
-      </fieldset>}
-      {me.account_type !== "client" && <Label text={t.profile.bio}><textarea name="bio" rows={3} maxLength={500} defaultValue={me.bio ?? ""} placeholder={t.extra.phBio} className="field" /></Label>}
-      {me.account_type !== "client" && <Label text={t.profile.click} hint={t.profile.clickHint}><input name="click_number" inputMode="tel" maxLength={30} defaultValue={me.click_number ?? ""} placeholder={t.extra.phCard} className="field" /></Label>}
+      </fieldset>
+      <Label text={t.profile.bio}><textarea name="bio" rows={3} maxLength={500} defaultValue={me.bio ?? ""} className="field" /></Label>
+      <Label text={t.profile.workArea} hint={t.profile.workAreaHint}><input name="work_area" maxLength={120} defaultValue={me.work_area ?? ""} placeholder="Toshkent, masofaviy" className="field" /></Label>
+      <Label text={t.profile.click} hint={t.profile.clickHint}><input name="click_number" inputMode="tel" maxLength={30} defaultValue={me.click_number ?? ""} placeholder="8600 0000 0000 0000" className="field" /></Label>
       <FormError error={error} />
       <div className="flex items-center gap-3">
         <button className="btn btn-primary" disabled={pending}>{pending ? t.my.saving : t.profile.save}</button>
@@ -89,10 +89,10 @@ export function PortfolioManager() {
   const { pending, error, submit } = useFormAction(async (fd) => {
     const title = String(fd.get("title") ?? "").trim();
     const yt = String(fd.get("youtube_url") ?? "").trim();
-    if (title.length < 2) return { ok: false, error: lang === "ru" ? "Введите название" : "Ish nomini kiriting" };
-    if (yt && !youtubeId(yt)) return { ok: false, error: lang === "ru" ? "Неверная ссылка YouTube" : "YouTube havolasi noto‘g‘ri" };
+    if (title.length < 2) return { ok: false, error: L3(lang, "Ish nomini kiriting", "Введите название", "Enter a title") };
+    if (yt && !youtubeId(yt)) return { ok: false, error: L3(lang, "YouTube havolasi noto‘g‘ri", "Неверная ссылка YouTube", "Invalid YouTube link") };
     const image = await readImage(fd.get("image"));
-    if (!yt && !image) return { ok: false, error: lang === "ru" ? "Нужна ссылка YouTube или фото" : "YouTube havolasi yoki rasm kerak" };
+    if (!yt && !image) return { ok: false, error: L3(lang, "YouTube havolasi yoki rasm kerak", "Нужна ссылка YouTube или фото", "A YouTube link or photo is required") };
     return addPortfolio({ title, description: String(fd.get("description") ?? "").trim() || null, youtube_url: yt || null, image });
   }, () => setOpen(false));
 
@@ -113,8 +113,8 @@ export function PortfolioManager() {
       />
       <Modal open={open} onClose={() => setOpen(false)} title={t.profile.addWork}>
         <form onSubmit={submit} className="space-y-4">
-          <Label text={t.profile.workTitle}><input name="title" required maxLength={100} placeholder={t.extra.phWorkTitle} className="field" /></Label>
-          <Label text={t.profile.workDesc}><textarea name="description" rows={2} maxLength={400} placeholder={t.extra.phWorkDesc} className="field" /></Label>
+          <Label text={t.profile.workTitle}><input name="title" required maxLength={100} className="field" /></Label>
+          <Label text={t.profile.workDesc}><textarea name="description" rows={2} maxLength={400} className="field" /></Label>
           <Label text={t.profile.workYoutube}><input name="youtube_url" placeholder="https://youtu.be/…" className="field" /></Label>
           <Label text={t.my.fImage}><input type="file" name="image" accept="image/jpeg,image/png,image/webp" className="field" /></Label>
           <FormError error={error} />

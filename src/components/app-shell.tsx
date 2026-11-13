@@ -4,36 +4,34 @@ import { useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { AnimatePresence, motion } from "framer-motion";
-import { useClerk } from "@clerk/nextjs";
-import { Briefcase, Camera, LayoutGrid, LogOut, Menu, Receipt, TrendingUp, User, X } from "lucide-react";
+import { signOutEverywhere } from "@/lib/firebase-client";
+import { Briefcase, Camera, LayoutGrid, LogOut, Menu, MessageCircle, Receipt, ShieldCheck, TrendingUp, User, X } from "lucide-react";
 import { cn } from "@/lib/cn";
 import { useT } from "@/lib/i18n-client";
 import { useStore } from "@/lib/store";
 import { Logo } from "./logo";
 import { Avatar } from "./avatar";
 import { LangSwitch } from "./lang-switch";
+import { ThemeToggle } from "./theme-toggle";
 import { Onboarding } from "./onboarding";
 import { fullName } from "@/lib/utils";
 
-export function AppShell({ children }: { children: React.ReactNode }) {
+export function AppShell({ children, isAdmin = false }: { children: React.ReactNode; isAdmin?: boolean }) {
   const { t } = useT();
   const { me: user, data } = useStore();
-  const { signOut } = useClerk();
   const pendingIn = data.orders.filter((o) => o.owner_id === user.id && o.status === "pending").length;
   const pathname = usePathname();
   const [open, setOpen] = useState(false);
 
-  const client = user.account_type === "client";
-  const base = [
+  const main = [
     { href: "/mobilograflar", label: t.nav.mobilografs, short: t.nav.mobilografs, Icon: Camera },
     { href: "/smm-mutaxassislari", label: t.nav.smm, short: "SMM", Icon: TrendingUp },
     { href: "/xizmatlar", label: t.nav.allServices, short: t.nav.allServices.split(" ").pop()!, Icon: LayoutGrid },
+    { href: "/mening-xizmatlarim", label: t.nav.myServices, short: t.nav.myServices.split(" ").pop()!, Icon: Briefcase },
+    { href: "/profil", label: t.nav.profile, short: t.nav.profile, Icon: User },
   ];
-  const profileItem = { href: "/profil", label: t.nav.profile, short: t.nav.profile, Icon: User };
-  const ordersItem = { href: "/buyurtmalar", label: client ? t.extra.myOrders : t.nav.orders, short: client ? t.extra.myOrders.split(" ").pop()! : t.nav.orders, Icon: Receipt };
-  const myServices = { href: "/mening-xizmatlarim", label: t.nav.myServices, short: t.nav.myServices.split(" ").pop()!, Icon: Briefcase };
-  const main = [...base, client ? ordersItem : myServices, profileItem];
-  const all = client ? main : [...base, myServices, ordersItem, profileItem];
+  const all = [...main.slice(0, 4), { href: "/buyurtmalar", label: t.nav.orders, short: t.nav.orders, Icon: Receipt }, main[4], { href: "/aloqa", label: t.extra.contactNav, short: t.extra.contactNav, Icon: MessageCircle }];
+  if (isAdmin) all.push({ href: "/admin", label: "Admin", short: "Admin", Icon: ShieldCheck });
   const isActive = (href: string) => pathname === href || (href !== "/" && pathname.startsWith(href + "/"));
 
   const NavLinks = ({ onNavigate }: { onNavigate?: () => void }) => (
@@ -47,7 +45,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
           className={cn("flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-semibold transition-colors", isActive(href) ? "bg-brand-50 text-brand" : "text-ink-soft hover:bg-slate-50 hover:text-ink")}
         >
           <Icon className="h-[18px] w-[18px]" /> <span className="flex-1">{label}</span>
-          {href === "/buyurtmalar" && !client && pendingIn > 0 && <span className="rounded-full bg-brand px-2 py-0.5 text-[11px] font-bold text-white">{pendingIn}</span>}
+          {href === "/buyurtmalar" && pendingIn > 0 && <span className="rounded-full bg-brand px-2 py-0.5 text-[11px] font-bold text-white">{pendingIn}</span>}
         </Link>
       ))}
     </nav>
@@ -59,7 +57,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
         <Avatar p={user} size={32} />
         <span className="truncate text-sm font-semibold">{fullName(user)}</span>
       </Link>
-      <button onClick={() => signOut({ redirectUrl: "/" })} className="flex w-full items-center gap-2 rounded-lg px-3 py-2 text-sm font-semibold text-ink-soft hover:bg-slate-50 hover:text-ink">
+      <button onClick={() => signOutEverywhere().finally(() => { window.location.href = "/"; })} className="flex w-full items-center gap-2 rounded-lg px-3 py-2 text-sm font-semibold text-ink-soft hover:bg-slate-50 hover:text-ink">
         <LogOut className="h-4 w-4" /> {t.nav.signOut}
       </button>
     </div>
@@ -70,7 +68,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
       <aside className="sticky top-0 hidden h-dvh flex-col gap-6 border-r border-slate-200/70 bg-white p-4 lg:flex">
         <Logo label={t.nav.home} className="px-2 pt-1" />
         <div className="flex-1 overflow-y-auto"><NavLinks /></div>
-        <LangSwitch className="self-start" />
+        <div className="flex items-center gap-2"><LangSwitch /><ThemeToggle /></div>
         <Account />
       </aside>
 
@@ -78,6 +76,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
         <Logo label={t.nav.home} />
         <div className="flex items-center gap-2">
           <LangSwitch />
+          <ThemeToggle />
           <button onClick={() => setOpen(true)} className="relative rounded-lg p-2 hover:bg-slate-100" aria-label={t.nav.menu}>
             <Menu className="h-5 w-5" />
             {pendingIn > 0 && <span className="absolute right-1 top-1 h-2.5 w-2.5 rounded-full bg-brand ring-2 ring-white" />}
@@ -111,8 +110,8 @@ export function AppShell({ children }: { children: React.ReactNode }) {
 
       <nav className="pb-safe fixed inset-x-0 bottom-0 z-40 grid grid-cols-5 border-t border-slate-200/70 bg-white/95 backdrop-blur lg:hidden" aria-label={t.nav.menu}>
         {main.map(({ href, short, Icon }) => (
-          <Link key={href} href={href} aria-current={isActive(href) ? "page" : undefined} className={cn("flex flex-col items-center gap-0.5 px-1 py-2 text-[11px] font-semibold", isActive(href) ? "text-brand" : "text-ink-soft")}>
-            <Icon className="h-5 w-5" />
+          <Link key={href} href={href} aria-current={isActive(href) ? "page" : undefined} className={cn("flex flex-col items-center gap-0.5 px-1 pb-1.5 pt-2 text-[11px] font-semibold", isActive(href) ? "text-brand" : "text-ink-soft")}>
+            <span className={cn("flex h-7 w-12 items-center justify-center rounded-full transition-colors", isActive(href) && "bg-brand-50")}><Icon className="h-5 w-5" /></span>
             <span className="max-w-full truncate">{short}</span>
           </Link>
         ))}

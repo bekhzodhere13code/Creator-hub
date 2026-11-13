@@ -1,5 +1,4 @@
 import { NextResponse } from "next/server";
-import { admin } from "@/server/supabase";
 import { tg } from "@/server/telegram";
 
 export const runtime = "nodejs";
@@ -12,13 +11,6 @@ export async function GET(req: Request) {
   if (!secret || url.searchParams.get("key") !== secret) return NextResponse.json({ ok: false }, { status: 401 });
   const hook = `${url.origin}/api/telegram/webhook`;
   const set = await tg("setWebhook", { url: hook, secret_token: secret, allowed_updates: ["message", "callback_query"], drop_pending_updates: true });
-  const menu = await tg("setChatMenuButton", { menu_button: { type: "web_app", text: "Ochish", web_app: { url: `${url.origin}/tg` } } });
   const me = await tg<{ username: string }>("getMe", {});
-  const info = await tg("getWebhookInfo", {});
-  let test: unknown = undefined;
-  if (url.searchParams.get("test")) {
-    const { data } = await admin().from("profiles").select("id, tg_chat_id").not("tg_chat_id", "is", null);
-    test = await Promise.all((data ?? []).map(async (p) => ({ id: p.id, chat: p.tg_chat_id, res: await tg("sendMessage", { chat_id: p.tg_chat_id, text: "✅ Creator Hub test xabari" }) })));
-  }
-  return NextResponse.json({ webhook: hook, setWebhook: set, bot: me.ok ? me.result?.username : me, menu, info, test });
+  return NextResponse.json({ webhook: hook, setWebhook: set, bot: me.ok ? me.result?.username : me });
 }

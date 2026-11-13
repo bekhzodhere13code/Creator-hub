@@ -1,5 +1,5 @@
 import "server-only";
-import { currentUser } from "@clerk/nextjs/server";
+import { getSession } from "./session";
 import { admin } from "./supabase";
 import type { Order, OrderStatus, PortfolioItem, Profile, Service } from "@/lib/utils";
 
@@ -11,17 +11,17 @@ export type AppData = {
   orders: Order[];
 };
 
-type ProfileRow = Profile & { account_type: string | null; tg_chat_id: number | null; tg_link_code: string | null; language: string | null };
+type ProfileRow = Profile & { tg_chat_id: number | null; tg_link_code: string | null; language: string | null };
 
-/** Clerk foydalanuvchisi uchun profil yozuvi yo‘q bo‘lsa yaratadi (birinchi kirishda). */
+/** Firebase foydalanuvchisi uchun profil yozuvi yo‘q bo‘lsa yaratadi (birinchi kirishda). */
 export async function ensureProfile(userId: string): Promise<ProfileRow> {
   const db = admin();
   const { data: existing } = await db.from("profiles").select("*").eq("id", userId).maybeSingle();
   if (existing) return existing as ProfileRow;
-  const u = await currentUser();
+  const u = await getSession();
   const row = {
     id: userId,
-    first_name: (u?.firstName ?? u?.username ?? "").slice(0, 40),
+    first_name: (u?.firstName ?? "").slice(0, 40),
     last_name: (u?.lastName ?? "").slice(0, 40),
     specialties: [] as string[],
     avatar_url: null, // profil rasmini foydalanuvchining o‘zi yuklaydi
@@ -35,7 +35,7 @@ export async function ensureProfile(userId: string): Promise<ProfileRow> {
 
 const publicProfile = (r: ProfileRow): Profile => ({
   id: r.id, first_name: r.first_name, last_name: r.last_name, specialties: r.specialties, bio: r.bio,
-  telegram: r.telegram, instagram: r.instagram, youtube: r.youtube, avatar_url: r.avatar_url, work_area: r.work_area ?? null, account_type: (r.account_type as Profile["account_type"]) ?? null,
+  telegram: r.telegram, instagram: r.instagram, youtube: r.youtube, avatar_url: r.avatar_url, work_area: r.work_area ?? null,
   click_number: null, has_click: Boolean(r.click_number),
 });
 
@@ -71,16 +71,13 @@ async function shapeOrder(userId: string, o: Record<string, unknown>, ownerClick
 export async function loadAppData(userId: string): Promise<AppData> {
   const db = admin();
   const meRow = await ensureProfile(userId);
-  const [profiles, services, portfolio, orders, sold] = await Promise.all([
+  const [profiles, services, portfolio, orders] = await Promise.all([
     db.from("profiles").select("*").order("created_at", { ascending: false }).limit(500),
     db.from("services").select("*").or(`status.eq.active,owner_id.eq.${userId}`).order("created_at", { ascending: false }).limit(500),
     db.from("portfolio").select("*").order("created_at", { ascending: false }).limit(1000),
     db.from("orders").select("*").or(`client_id.eq.${userId},owner_id.eq.${userId}`).order("created_at", { ascending: false }).limit(200),
-    db.from("orders").select("service_id").eq("status", "confirmed").not("service_id", "is", null).limit(5000),
   ]);
-  for (const r of [profiles, services, portfolio, orders, sold]) if (r.error) throw r.error;
-  const soldBy = new Map<string, number>();
-  for (const r of sold.data as { service_id: string }[]) soldBy.set(r.service_id, (soldBy.get(r.service_id) ?? 0) + 1);
+  for (const r of [profiles, services, portfolio, orders]) if (r.error) throw r.error;
 
   const clickByOwner = new Map<string, string | null>();
   for (const p of profiles.data as ProfileRow[]) clickByOwner.set(p.id, p.click_number);
@@ -93,7 +90,7 @@ export async function loadAppData(userId: string): Promise<AppData> {
   return {
     me,
     profiles: [me, ...list],
-    services: (services.data as Service[]).map((s) => ({ ...s, price: s.price == null ? null : Number(s.price), sold_count: soldBy.get(s.id) ?? 0 })),
+    services: (services.data as Service[]).map((s) => ({ ...s, price: s.price == null ? null : Number(s.price) })),
     portfolio: portfolio.data as PortfolioItem[],
     orders: await Promise.all((orders.data as Record<string, unknown>[]).map((o) => shapeOrder(userId, o, clickByOwner.get(o.owner_id as string) ?? null))),
   };

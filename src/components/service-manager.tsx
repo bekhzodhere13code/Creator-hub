@@ -4,9 +4,9 @@ import { Pencil, Plus, Trash2 } from "lucide-react";
 import { Empty, PageHead, ServiceCard, catLabel } from "./cards";
 import { FormError, Label, SocialFields, useFormAction } from "./form-bits";
 import { Modal } from "./modal";
-import { TelegramCard } from "./telegram-card";
 import { readImage } from "@/lib/image";
 import { useT } from "@/lib/i18n-client";
+import { L3 } from "@/lib/i18n";
 import { useStore } from "@/lib/store";
 import { CATEGORIES, normalizeUrl, type ServiceWithOwner } from "@/lib/utils";
 
@@ -14,18 +14,16 @@ export function ServiceManager() {
   const { t } = useT();
   const { me, data, withOwner, deleteService } = useStore();
   const services = data.services.filter((s) => s.owner_id === me.id).map(withOwner);
-  if (me.account_type !== "creator") return <Empty text={t.extra.creatorsView} />;
   const [editing, setEditing] = useState<ServiceWithOwner | "new" | null>(null);
   const [socialOpen, setSocialOpen] = useState(false);
 
   // Birinchi xizmat qo‘shishda ijtimoiy tarmoqlarni ulash modali
-  const needsSocials = services.length === 0 && !me.telegram;
+  const needsSocials = services.length === 0 && !me.instagram && !me.telegram && !me.youtube;
   const add = () => (needsSocials ? setSocialOpen(true) : setEditing("new"));
   const afterSocial = () => { setSocialOpen(false); setEditing("new"); };
 
   return (
     <>
-      {!me.tg_linked && <div className="mb-5"><TelegramCard note={t.extra.tgNeed} /></div>}
       <PageHead title={t.my.title} action={<button onClick={add} className="btn btn-primary"><Plus className="h-4 w-4" /> {t.my.add}</button>} />
       {services.length ? (
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
@@ -57,9 +55,15 @@ export function useSocialsAction() {
   const { lang } = useT();
   const { saveSocials } = useStore();
   return (fd: FormData) => {
-    const telegram = normalizeUrl(String(fd.get("telegram") ?? "").trim(), "telegram");
-    if (telegram && !/^https?:\/\/(www\.)?(t\.me|telegram\.me)\//i.test(telegram)) return { ok: false as const, error: `Telegram: ${lang === "ru" ? "Неверная ссылка" : "Havola noto‘g‘ri"}` };
-    return saveSocials({ telegram });
+    const val = (k: string) => String(fd.get(k) ?? "").trim();
+    const instagram = normalizeUrl(val("instagram"), "instagram");
+    const telegram = normalizeUrl(val("telegram"), "telegram");
+    const youtube = normalizeUrl(val("youtube"), "youtube");
+    const bad = L3(lang, "Havola noto‘g‘ri", "Неверная ссылка", "Invalid link");
+    if (instagram && !/^https?:\/\/(www\.)?instagram\.com\//i.test(instagram)) return { ok: false as const, error: `Instagram: ${bad}` };
+    if (telegram && !/^https?:\/\/(www\.)?(t\.me|telegram\.me)\//i.test(telegram)) return { ok: false as const, error: `Telegram: ${bad}` };
+    if (youtube && !/^https?:\/\/(www\.|m\.)?youtube\.com\/|^https?:\/\/youtu\.be\//i.test(youtube)) return { ok: false as const, error: `YouTube: ${bad}` };
+    return saveSocials({ instagram, telegram, youtube });
   };
 }
 
@@ -86,9 +90,9 @@ function ServiceForm({ service, onDone }: { service: ServiceWithOwner | null; on
   const { pending, error, submit } = useFormAction(async (fd) => {
     const title = String(fd.get("title") ?? "").trim();
     const description = String(fd.get("description") ?? "").trim();
-    if (title.length < 3) return { ok: false, error: lang === "ru" ? "Название: минимум 3 символа" : "Nomi kamida 3 belgi" };
-    if (description.length < 10) return { ok: false, error: lang === "ru" ? "Описание: минимум 10 символов" : "Tavsif kamida 10 belgi" };
-    if (!me.click_number && String(fd.get("click_number") ?? "").replace(/\D/g, "").length < 9) return { ok: false, error: lang === "ru" ? "Введите номер карты или телефон Click" : "Karta yoki Click raqamini kiriting" };
+    if (title.length < 3) return { ok: false, error: L3(lang, "Nomi kamida 3 belgi", "Название: минимум 3 символа", "Title: at least 3 characters") };
+    if (description.length < 10) return { ok: false, error: L3(lang, "Tavsif kamida 10 belgi", "Описание: минимум 10 символов", "Description: at least 10 characters") };
+    if (!me.click_number && String(fd.get("click_number") ?? "").replace(/\D/g, "").length < 9) return { ok: false, error: L3(lang, "Karta yoki Click raqamini kiriting", "Введите номер карты или телефон Click", "Enter your Click card or phone number") };
     const priceRaw = String(fd.get("price") ?? "").replace(/\s/g, "");
     const image = await readImage(fd.get("image"));
     return saveService({
@@ -97,7 +101,6 @@ function ServiceForm({ service, onDone }: { service: ServiceWithOwner | null; on
       category: String(fd.get("category")) as (typeof CATEGORIES)[number],
       price: priceRaw ? Number(priceRaw) : null,
       status: fd.get("active") === "on" ? "active" : "inactive",
-      work_area: String(fd.get("work_area") ?? "").trim() || null,
       click_number: String(fd.get("click_number") ?? "").replace(/[^\d+ ]/g, "").trim() || null,
       image,
     });
@@ -105,19 +108,18 @@ function ServiceForm({ service, onDone }: { service: ServiceWithOwner | null; on
 
   return (
     <form onSubmit={submit} className="space-y-4">
-      <Label text={t.my.fTitle}><input name="title" required maxLength={100} defaultValue={service?.title} placeholder={t.extra.phTitle} className="field" /></Label>
-      <Label text={t.my.fDesc}><textarea name="description" required maxLength={1000} rows={4} defaultValue={service?.description} placeholder={t.extra.phDesc} className="field" /></Label>
+      <Label text={t.my.fTitle}><input name="title" required maxLength={100} defaultValue={service?.title} className="field" /></Label>
+      <Label text={t.my.fDesc}><textarea name="description" required maxLength={1000} rows={4} defaultValue={service?.description} className="field" /></Label>
       <div className="grid gap-4 sm:grid-cols-2">
         <Label text={t.my.fCategory}>
           <select name="category" defaultValue={service?.category ?? "mobilografiya"} className="field">
             {CATEGORIES.map((c) => <option key={c} value={c}>{catLabel(t, c)}</option>)}
           </select>
         </Label>
-        <Label text={t.my.fPrice}><input name="price" inputMode="numeric" pattern="[0-9 ]*" defaultValue={service?.price ?? ""} placeholder={t.extra.phPrice} className="field" /></Label>
+        <Label text={t.my.fPrice}><input name="price" inputMode="numeric" pattern="[0-9 ]*" defaultValue={service?.price ?? ""} placeholder="500000" className="field" /></Label>
       </div>
-      <Label text={t.extra.workArea} hint={t.extra.workAreaHint}><input name="work_area" maxLength={120} defaultValue={service?.work_area ?? ""} placeholder={t.extra.workAreaPh} className="field" /></Label>
       {!me.click_number && (
-        <Label text={t.profile.click} hint={t.profile.clickHint}><input name="click_number" required inputMode="tel" maxLength={30} placeholder={t.extra.phCard} className="field" /></Label>
+        <Label text={t.profile.click} hint={t.profile.clickHint}><input name="click_number" required inputMode="tel" maxLength={30} placeholder="8600 0000 0000 0000" className="field" /></Label>
       )}
       <Label text={t.my.fImage}><input type="file" name="image" accept="image/jpeg,image/png,image/webp" className="field file:mr-3 file:rounded-md file:border-0 file:bg-brand-50 file:px-3 file:py-1 file:text-sm file:font-semibold file:text-brand" /></Label>
       <label className="flex items-center gap-2 text-sm font-medium">

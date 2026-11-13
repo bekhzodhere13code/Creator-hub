@@ -5,7 +5,7 @@ import { useT } from "@/lib/i18n-client";
 import { useStore } from "@/lib/store";
 import { createTelegramLinkAction, unlinkTelegramAction } from "@/server/actions";
 
-export function TelegramCard({ note }: { note?: string }) {
+export function TelegramCard() {
   const { t } = useT();
   const { me, refresh } = useStore();
   const [pending, start] = useTransition();
@@ -25,7 +25,7 @@ export function TelegramCard({ note }: { note?: string }) {
         <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-brand-50 text-brand"><Bell className="h-5 w-5" /></span>
         <div className="min-w-0">
           <h2 className="font-display text-lg font-bold">{t.profile.tgBot}</h2>
-          <p className="text-sm text-ink-soft">{me.tg_linked ? t.profile.tgConnected : (note ?? t.profile.tgBotText)}</p>
+          <p className="text-sm text-ink-soft">{me.tg_linked ? t.profile.tgConnected : t.profile.tgBotText}</p>
         </div>
       </div>
       {me.tg_linked ? (

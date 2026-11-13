@@ -1,14 +1,17 @@
-import { clerkMiddleware, createRouteMatcher } from "@clerk/nextjs/server";
+import { NextResponse, type NextRequest } from "next/server";
 
-const isPublicRoute = createRouteMatcher(["/", "/sign-in(.*)", "/sign-up(.*)", "/api/telegram/webhook", "/api/telegram/setup", "/tg", "/api/tg/auth"]);
+const PUBLIC = ["/", "/aloqa", "/sign-in", "/sign-up", "/api/telegram/webhook", "/api/telegram/setup", "/api/auth/session", "/api/auth/logout", "/api/auth/telegram"];
+const isPublic = (p: string) => PUBLIC.some((x) => p === x || (x !== "/" && p.startsWith(x + "/")));
 
-// Login qilmagan foydalanuvchi ochiq bo‘lmagan sahifaga kirsa -> /sign-in.
-// API marshrutlarida esa 401 qaytadi.
-export default clerkMiddleware(async (auth, req) => {
-  if (!isPublicRoute(req)) {
-    await auth.protect();
-  }
-});
+// Edge’da faqat cookie borligi tekshiriladi; haqiqiy tekshiruv serverda (getSession).
+export function middleware(req: NextRequest) {
+  const { pathname } = req.nextUrl;
+  if (isPublic(pathname) || req.cookies.get("__session")) return NextResponse.next();
+  if (pathname.startsWith("/api/")) return NextResponse.json({ error: "Kirish talab qilinadi" }, { status: 401 });
+  const url = req.nextUrl.clone();
+  url.pathname = "/sign-in";
+  return NextResponse.redirect(url);
+}
 
 export const config = {
   matcher: [

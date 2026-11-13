@@ -3,7 +3,6 @@ import { useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { useParams, useRouter } from "next/navigation";
-import { MapPin } from "lucide-react";
 import { Avatar } from "@/components/avatar";
 import { Empty, catLabel } from "@/components/cards";
 import { useT } from "@/lib/i18n-client";
@@ -52,16 +51,13 @@ export default function ServicePage() {
             <p className="font-display text-2xl font-extrabold">{price ? `${price} ${t.common.sum}` : t.service.negotiable}</p>
           </div>
           <p className="whitespace-pre-line text-sm leading-relaxed text-ink-soft">{service.description}</p>
-          {service.work_area && <p className="flex items-center gap-1.5 text-sm font-medium"><MapPin className="h-4 w-4 text-brand" /> {service.work_area}</p>}
           {service.owner && (
             <Link href={`/creator/${service.owner.id}`} className="flex items-center gap-3 rounded-xl bg-surface p-3">
               <Avatar p={service.owner} size={40} />
               <span className="text-sm"><span className="block text-xs text-ink-soft">{t.service.by}</span><span className="font-semibold">{fullName(service.owner)}</span></span>
             </Link>
           )}
-          {me.account_type !== "client" && !own ? (
-            <p className="rounded-xl bg-slate-100 px-4 py-3 text-sm text-ink-soft">{t.extra.creatorsView}</p>
-          ) : own ? (
+          {own ? (
             <p className="text-sm text-ink-soft">{t.service.own}</p>
           ) : !hasClick ? (
             <p className="text-sm text-amber-700">{t.service.noClick}</p>
