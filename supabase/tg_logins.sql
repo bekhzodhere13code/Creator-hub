@@ -7,4 +7,7 @@ create table if not exists public.tg_logins (
   used        boolean not null default false,
   created_at  timestamptz not null default now()
 );
-alter table public.tg_logins enable row level security; -- siyosat yo‘q: faqat service role kaliti kira oladi
+alter table public.tg_logins enable row level security;
+-- Ilova bazaga boshqa jadvallar kabi app_secret_ok() orqali kiradi
+drop policy if exists app_server_access on public.tg_logins;
+create policy app_server_access on public.tg_logins for all to anon using (app_secret_ok()) with check (app_secret_ok());

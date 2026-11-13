@@ -17,7 +17,7 @@ const auth = getAuth(app);
 async function startSession(user: User) {
   const idToken = await user.getIdToken(true);
   const r = await fetch("/api/auth/session", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ idToken }) });
-  if (!r.ok) throw new Error("session");
+  if (!r.ok) throw Object.assign(new Error("session"), { code: r.status >= 500 ? "app/server-config" : "app/session" });
   await signOut(auth); // brauzerda Firebase holati kerak emas, server cookie yetarli
 }
 
