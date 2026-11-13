@@ -14,7 +14,7 @@ export function AuthShell({
 }) {
   return (
     <main className="grid min-h-screen lg:grid-cols-[minmax(0,5fr)_minmax(0,6fr)]">
-      <aside className="hidden flex-col justify-between bg-[#0A0A1F] p-10 text-white lg:flex xl:p-14">
+      <aside className="hidden auth-aside flex-col justify-between bg-[#0A0A1F] p-10 text-white lg:flex xl:p-14">
         <Logo dark />
         <div className="max-w-md">
           <h1 className="font-display text-4xl font-extrabold leading-tight">{heading}</h1>

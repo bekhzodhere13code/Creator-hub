@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { SignIn } from "@clerk/nextjs";
+import { AuthForm } from "@/components/auth/auth-form";
 import { AuthShell } from "@/components/auth/auth-shell";
 
 export const metadata: Metadata = { title: "Kirish" };
@@ -14,7 +14,7 @@ export default function SignInPage() {
         "Buyurtmalaringiz holatini kuzating",
       ]}
     >
-      <SignIn />
+      <AuthForm mode="in" />
     </AuthShell>
   );
 }

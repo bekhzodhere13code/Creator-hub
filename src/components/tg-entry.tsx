@@ -1,7 +1,7 @@
 "use client";
 import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
-import { useAuth, useSignIn } from "@clerk/nextjs";
+import { signInWithTelegramToken } from "@/lib/firebase-client";
 import { Logo } from "./logo";
 import { getWebApp } from "./tg-init";
 import { useT } from "@/lib/i18n-client";
@@ -12,15 +12,11 @@ type State = "loading" | "not_linked" | "error" | "browser";
 export function TgEntry() {
   const { t } = useT();
   const router = useRouter();
-  const { isLoaded: authLoaded, isSignedIn } = useAuth();
-  const { isLoaded, signIn, setActive } = useSignIn();
   const [state, setState] = useState<State>("loading");
   const started = useRef(false);
 
   useEffect(() => {
-    if (!authLoaded) return;
-    if (isSignedIn) { router.replace("/"); return; }
-    if (!isLoaded || started.current) return;
+    if (started.current) return;
     // Telegram skripti yuklanishini biroz kutamiz
     let tries = 0;
     const timer = setInterval(async () => {
@@ -35,14 +31,13 @@ export function TgEntry() {
         const res = await fetch("/api/tg/auth", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ initData: w.initData }) });
         const j = (await res.json()) as { ok: boolean; token?: string; reason?: string };
         if (j.ok && j.token) {
-          const r = await signIn!.create({ strategy: "ticket", ticket: j.token });
-          if (r.status === "complete") { await setActive!({ session: r.createdSessionId }); router.replace("/"); return; }
-          setState("error");
+          await signInWithTelegramToken(j.token);
+          router.replace("/"); router.refresh(); return;
         } else setState(j.reason === "not_linked" ? "not_linked" : "error");
       } catch { setState("error"); }
     }, 150);
     return () => clearInterval(timer);
-  }, [authLoaded, isSignedIn, isLoaded, signIn, setActive, router]);
+  }, [router]);
 
   const openSite = () => {
     const url = `${location.origin}/sign-up`;

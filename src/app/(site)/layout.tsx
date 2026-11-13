@@ -1,4 +1,4 @@
-import { auth } from "@clerk/nextjs/server";
+import { getSession, isAdminSession } from "@/server/session";
 import { AppShell } from "@/components/app-shell";
 import { BackendNotice } from "@/components/notices";
 import { PublicShell } from "@/components/public-shell";
@@ -9,7 +9,8 @@ import { hasBackend } from "@/server/supabase";
 export const dynamic = "force-dynamic";
 
 export default async function SiteLayout({ children }: { children: React.ReactNode }) {
-  const { userId } = await auth();
+  const session = await getSession();
+  const userId = session?.uid;
   if (!userId) return <PublicShell>{children}</PublicShell>;
   if (!hasBackend()) return <BackendNotice kind="setup" />;
   let snapshot;
@@ -21,7 +22,7 @@ export default async function SiteLayout({ children }: { children: React.ReactNo
   }
   return (
     <StoreProvider snapshot={snapshot}>
-      <AppShell>{children}</AppShell>
+      <AppShell isAdmin={isAdminSession(session)}>{children}</AppShell>
     </StoreProvider>
   );
 }

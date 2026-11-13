@@ -1,6 +1,7 @@
 "use client";
 import Link from "next/link";
 import { Logo } from "./logo";
+import { ThemeToggle } from "./theme-toggle";
 import { LangSwitch } from "./lang-switch";
 import { useT } from "@/lib/i18n-client";
 
@@ -13,6 +14,8 @@ export function PublicShell({ children }: { children: React.ReactNode }) {
           <Logo label={t.nav.home} />
           <div className="flex items-center gap-2">
             <LangSwitch />
+            <ThemeToggle />
+            <Link href="/aloqa" className="btn btn-ghost hidden !px-3 !py-2 sm:inline-flex">{t.extra.contactNav}</Link>
             <Link href="/sign-in" className="btn btn-ghost !px-3 !py-2">{t.nav.signIn}</Link>
             <Link href="/sign-up" className="btn btn-primary !py-2">{t.nav.signUp}</Link>
           </div>

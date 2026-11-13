@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { clerkClient } from "@clerk/nextjs/server";
+import { adminAuth } from "@/server/firebase-admin";
 import { Logo } from "@/components/logo";
 import { isAdmin } from "@/server/admin";
 import { effectiveStatus } from "@/server/data";
@@ -36,9 +36,8 @@ export default async function AdminPage() {
   if (!(await isAdmin())) notFound();
 
   const db = admin();
-  const client = await clerkClient();
-  const [users, profiles, services, orders, portfolio] = await Promise.all([
-    client.users.getUserList({ limit: 200, orderBy: "-created_at" }),
+  const [fb, profiles, services, orders, portfolio] = await Promise.all([
+    adminAuth().listUsers(1000),
     db.from("profiles").select("id,first_name,last_name,specialties,account_type,tg_chat_id,telegram,click_number,created_at").order("created_at", { ascending: false }).limit(1000),
     db.from("services").select("id,owner_id,title,category,price,status,created_at").order("created_at", { ascending: false }).limit(1000),
     db.from("orders").select("id,service_id,service_title,price,client_id,owner_id,status,expires_at,created_at").order("created_at", { ascending: false }).limit(1000),
@@ -46,6 +45,10 @@ export default async function AdminPage() {
   ]);
   for (const r of [profiles, services, orders, portfolio]) if (r.error) throw r.error;
 
+  const fbUsers = fb.users
+    .map((u) => ({ id: u.uid, email: u.email ?? "", name: u.displayName ?? "", createdAt: Date.parse(u.metadata.creationTime) || 0, lastSignInAt: Date.parse(u.metadata.lastSignInTime ?? "") || 0, disabled: u.disabled }))
+    .sort((a, b) => b.createdAt - a.createdAt);
+  const users = { data: fbUsers.slice(0, 200), totalCount: fbUsers.length };
   const P = profiles.data as P[], S = services.data as S[];
   const O = (orders.data as O[]).map((o) => ({ ...o, eff: effectiveStatus(o) }));
   const pById = new Map(P.map((p) => [p.id, p]));
@@ -59,14 +62,14 @@ export default async function AdminPage() {
   const day = Date.now() - 864e5;
 
   const stats: [string, string][] = [
-    ["Foydalanuvchilar (Clerk)", String(users.totalCount)],
+    ["Foydalanuvchilar", String(users.totalCount)],
     ["Ijodkorlar / Mijozlar", `${P.filter((p) => p.account_type !== "client" && p.account_type).length} / ${P.filter((p) => p.account_type === "client").length}`],
     ["Telegram ulangan", String(P.filter((p) => p.tg_chat_id).length)],
     ["Xizmatlar", String(S.length)],
     ["Buyurtmalar", String(O.length)],
     ["Sotilgan (to‘langan)", String(confirmed.length)],
     ["Jami tushum", sum(revenue)],
-    ["Oxirgi 24 soatda kirgan", String(users.data.filter((u) => (u.lastSignInAt ?? 0) > day).length)],
+    ["Oxirgi 24 soatda kirgan", String(fbUsers.filter((u) => u.lastSignInAt > day).length)],
   ];
 
   return (
@@ -107,12 +110,12 @@ export default async function AdminPage() {
           <Table head={["Ro‘yxatdan o‘tgan", "Oxirgi kirish", "Ism", "Email", "Rol", "Yo‘nalish", "Telegram", "Xizmat", "Portfolio", "Karta"]}>
             {users.data.map((u) => {
               const p = pById.get(u.id);
-              const email = u.primaryEmailAddress?.emailAddress ?? "";
-              const tgOnly = email.endsWith("@telegram.creator-hub.app");
+              const email = u.email;
+              const tgOnly = !email && u.id.startsWith("tg_");
               return (
                 <tr key={u.id}>
                   <Td>{fmt(u.createdAt)}</Td><Td>{fmt(u.lastSignInAt)}</Td>
-                  <Td strong>{[u.firstName, u.lastName].filter(Boolean).join(" ") || name(u.id)}</Td>
+                  <Td strong>{name(u.id) !== "Nomsiz" ? name(u.id) : u.name || "Nomsiz"}{u.disabled ? " (bloklangan)" : ""}</Td>
                   <Td>{tgOnly ? "Telegram orqali" : email || "—"}</Td>
                   <Td>{p?.account_type ? ROLE[p.account_type] ?? p.account_type : "Tanlamagan"}</Td>
                   <Td>{p?.specialties?.join(", ") || "—"}</Td>

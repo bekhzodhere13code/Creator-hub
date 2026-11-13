@@ -1,5 +1,5 @@
 import "server-only";
-import { currentUser } from "@clerk/nextjs/server";
+import { getSession } from "./session";
 import { admin } from "./supabase";
 import type { Order, OrderStatus, PortfolioItem, Profile, Service } from "@/lib/utils";
 
@@ -13,15 +13,15 @@ export type AppData = {
 
 type ProfileRow = Profile & { account_type: string | null; tg_chat_id: number | null; tg_link_code: string | null; language: string | null };
 
-/** Clerk foydalanuvchisi uchun profil yozuvi yo‘q bo‘lsa yaratadi (birinchi kirishda). */
+/** Firebase foydalanuvchisi uchun profil yozuvi yo‘q bo‘lsa yaratadi (birinchi kirishda). */
 export async function ensureProfile(userId: string): Promise<ProfileRow> {
   const db = admin();
   const { data: existing } = await db.from("profiles").select("*").eq("id", userId).maybeSingle();
   if (existing) return existing as ProfileRow;
-  const u = await currentUser();
+  const u = await getSession();
   const row = {
     id: userId,
-    first_name: (u?.firstName ?? u?.username ?? "").slice(0, 40),
+    first_name: (u?.firstName ?? "").slice(0, 40),
     last_name: (u?.lastName ?? "").slice(0, 40),
     specialties: [] as string[],
     avatar_url: null, // profil rasmini foydalanuvchining o‘zi yuklaydi

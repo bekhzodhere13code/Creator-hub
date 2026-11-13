@@ -1,6 +1,7 @@
-export const LANGS = ["uz", "ru"] as const;
+import { en } from "./i18n-en";
+export const LANGS = ["uz", "ru", "en"] as const;
 export type Lang = (typeof LANGS)[number];
-export const isLang = (v: unknown): v is Lang => v === "uz" || v === "ru";
+export const isLang = (v: unknown): v is Lang => v === "uz" || v === "ru" || v === "en";
 
 const uz = {
   nav: {
@@ -184,6 +185,8 @@ const uz = {
     landingCta: "Boshlash",
   },
   extra: {
+    contactNav: "Aloqa", contactTitle: "Biz bilan aloqa", contactText: "Savol, taklif yoki muammo bo‘lsa, shu yerdan yozing — tez javob beramiz.",
+    telegram: "Telegram", email: "Elektron pochta", contactCreator: "Ijodkor bilan bog‘lanish", theme: "Mavzu", light: "Kunduzgi", dark: "Tungi", notSet: "Hozircha ko‘rsatilmagan",
     clientTitle: "Mijoz",
     clientText: "Xizmatlarni ko‘raman va sotib olaman",
     creatorText: "Xizmat sotaman va ishlarimni ko‘rsataman",
@@ -406,6 +409,8 @@ const ru: Dict = {
     landingCta: "Начать",
   },
   extra: {
+    contactNav: "Контакты", contactTitle: "Связаться с нами", contactText: "Есть вопрос, предложение или проблема — напишите нам, мы быстро ответим.",
+    telegram: "Telegram", email: "Эл. почта", contactCreator: "Связаться с автором", theme: "Тема", light: "Светлая", dark: "Тёмная", notSet: "Пока не указано",
     clientTitle: "Клиент",
     clientText: "Смотрю услуги и покупаю",
     creatorText: "Продаю услуги и показываю работы",
@@ -444,4 +449,7 @@ const ru: Dict = {
   },
 };
 
-export const DICTS: Record<Lang, Dict> = { uz, ru };
+export const DICTS: Record<Lang, Dict> = { uz, ru, en };
+
+/** Qisqa 3 tilli matn tanlagich (xatolik xabarlari uchun). */
+export const L3 = (lang: Lang, uzT: string, ruT: string, enT: string) => (lang === "ru" ? ruT : lang === "en" ? enT : uzT);

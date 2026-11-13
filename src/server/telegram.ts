@@ -53,6 +53,10 @@ export const TG_TEXT = {
     rejectedToClient: "❌ Mutaxassis to‘lov kelmaganini bildirdi:",
     expired: "Buyurtma muddati tugagan.",
     open: "🚀 Creator Hub’ni ochish",
+    loginAsk: "🔐 Creator Hub saytiga kirishni tasdiqlaysizmi?\n\nFaqat o‘zingiz saytda “Telegram orqali kirish”ni bosgan bo‘lsangiz tasdiqlang.",
+    loginYes: "✅ Ha, kirish",
+    loginDone: "✅ Tasdiqlandi. Saytga qayting — kirish avtomatik bajariladi.",
+    loginBad: "Havola eskirgan. Saytda qaytadan “Telegram orqali kirish”ni bosing.",
   },
   ru: {
     newOrder: "🆕 <b>Новый заказ!</b>",
@@ -73,6 +77,10 @@ export const TG_TEXT = {
     rejectedToClient: "❌ Специалист сообщил, что оплата не поступила:",
     expired: "Срок заказа истёк.",
     open: "🚀 Открыть Creator Hub",
+    loginAsk: "🔐 Подтвердить вход на сайт Creator Hub?\n\nПодтверждайте, только если вы сами нажали «Войти через Telegram» на сайте.",
+    loginYes: "✅ Да, войти",
+    loginDone: "✅ Подтверждено. Вернитесь на сайт — вход выполнится автоматически.",
+    loginBad: "Ссылка устарела. Нажмите «Войти через Telegram» на сайте ещё раз.",
   },
 } as const;
 export type TgLang = keyof typeof TG_TEXT;

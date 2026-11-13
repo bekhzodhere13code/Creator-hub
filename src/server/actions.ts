@@ -1,6 +1,6 @@
 "use server";
 import { randomBytes } from "node:crypto";
-import { auth } from "@clerk/nextjs/server";
+import { getSession } from "./session";
 import { z } from "zod";
 import { admin } from "./supabase";
 import { ensureProfile, loadOrder } from "./data";
@@ -13,9 +13,9 @@ type Ok<T = object> = { ok: true } & T;
 type Fail = { ok: false; error: string };
 
 async function uid(): Promise<string> {
-  const { userId } = await auth();
-  if (!userId) throw new Error("Kirish talab qilinadi");
-  return userId;
+  const s = await getSession();
+  if (!s) throw new Error("Kirish talab qilinadi");
+  return s.uid;
 }
 
 const wrap = async <T>(fn: () => Promise<T | Fail>): Promise<T | Fail> => {
@@ -228,9 +228,9 @@ export async function cancelOrderAction(orderId: string): Promise<Ok | Fail> {
 
 /** Buyurtma sahifasi polling uchun: faqat o‘zingizning buyurtmangiz. */
 export async function getOrderAction(orderId: string): Promise<Order | null> {
-  const { userId } = await auth();
-  if (!userId) return null;
-  return loadOrder(userId, orderId);
+  const s = await getSession();
+  if (!s) return null;
+  return loadOrder(s.uid, orderId);
 }
 
 /* ---------- Telegram ulash ---------- */

@@ -4,21 +4,21 @@ import { useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { AnimatePresence, motion } from "framer-motion";
-import { useClerk } from "@clerk/nextjs";
-import { Briefcase, Camera, LayoutGrid, LogOut, Menu, Receipt, TrendingUp, User, X } from "lucide-react";
+import { signOutEverywhere } from "@/lib/firebase-client";
+import { Briefcase, Camera, LayoutGrid, LogOut, Menu, MessageCircle, Receipt, ShieldCheck, TrendingUp, User, X } from "lucide-react";
 import { cn } from "@/lib/cn";
 import { useT } from "@/lib/i18n-client";
 import { useStore } from "@/lib/store";
 import { Logo } from "./logo";
 import { Avatar } from "./avatar";
 import { LangSwitch } from "./lang-switch";
+import { ThemeToggle } from "./theme-toggle";
 import { Onboarding } from "./onboarding";
 import { fullName } from "@/lib/utils";
 
-export function AppShell({ children }: { children: React.ReactNode }) {
+export function AppShell({ children, isAdmin = false }: { children: React.ReactNode; isAdmin?: boolean }) {
   const { t } = useT();
   const { me: user, data } = useStore();
-  const { signOut } = useClerk();
   const pendingIn = data.orders.filter((o) => o.owner_id === user.id && o.status === "pending").length;
   const pathname = usePathname();
   const [open, setOpen] = useState(false);
@@ -33,7 +33,8 @@ export function AppShell({ children }: { children: React.ReactNode }) {
   const ordersItem = { href: "/buyurtmalar", label: client ? t.extra.myOrders : t.nav.orders, short: client ? t.extra.myOrders.split(" ").pop()! : t.nav.orders, Icon: Receipt };
   const myServices = { href: "/mening-xizmatlarim", label: t.nav.myServices, short: t.nav.myServices.split(" ").pop()!, Icon: Briefcase };
   const main = [...base, client ? ordersItem : myServices, profileItem];
-  const all = client ? main : [...base, myServices, ordersItem, profileItem];
+  const tail = [{ href: "/aloqa", label: t.extra.contactNav, short: t.extra.contactNav, Icon: MessageCircle }, ...(isAdmin ? [{ href: "/admin", label: "Admin", short: "Admin", Icon: ShieldCheck }] : [])];
+  const all = [...(client ? main : [...base, myServices, ordersItem, profileItem]), ...tail];
   const isActive = (href: string) => pathname === href || (href !== "/" && pathname.startsWith(href + "/"));
 
   const NavLinks = ({ onNavigate }: { onNavigate?: () => void }) => (
@@ -59,7 +60,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
         <Avatar p={user} size={32} />
         <span className="truncate text-sm font-semibold">{fullName(user)}</span>
       </Link>
-      <button onClick={() => signOut({ redirectUrl: "/" })} className="flex w-full items-center gap-2 rounded-lg px-3 py-2 text-sm font-semibold text-ink-soft hover:bg-slate-50 hover:text-ink">
+      <button onClick={() => signOutEverywhere().finally(() => { window.location.href = "/"; })} className="flex w-full items-center gap-2 rounded-lg px-3 py-2 text-sm font-semibold text-ink-soft hover:bg-slate-50 hover:text-ink">
         <LogOut className="h-4 w-4" /> {t.nav.signOut}
       </button>
     </div>
@@ -70,7 +71,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
       <aside className="sticky top-0 hidden h-dvh flex-col gap-6 border-r border-slate-200/70 bg-white p-4 lg:flex">
         <Logo label={t.nav.home} className="px-2 pt-1" />
         <div className="flex-1 overflow-y-auto"><NavLinks /></div>
-        <LangSwitch className="self-start" />
+        <div className="flex items-center gap-2"><LangSwitch /><ThemeToggle /></div>
         <Account />
       </aside>
 
@@ -78,6 +79,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
         <Logo label={t.nav.home} />
         <div className="flex items-center gap-2">
           <LangSwitch />
+          <ThemeToggle />
           <button onClick={() => setOpen(true)} className="relative rounded-lg p-2 hover:bg-slate-100" aria-label={t.nav.menu}>
             <Menu className="h-5 w-5" />
             {pendingIn > 0 && <span className="absolute right-1 top-1 h-2.5 w-2.5 rounded-full bg-brand ring-2 ring-white" />}
