@@ -18,7 +18,7 @@ export function HomeView() {
         <div className="relative max-w-2xl">
           <span className="inline-block rounded-full bg-white/10 px-3 py-1 text-xs font-semibold">{t.home.badge}</span>
           <h1 className="mt-4 text-balance text-3xl font-extrabold leading-[1.05] sm:text-5xl">{me.account_type === "client" ? t.extra.clientHome : t.home.title}</h1>
-          <p className="mt-4 max-w-lg text-sm leading-relaxed text-slate-300 sm:text-base">{t.home.text}</p>
+          <p className="mt-4 max-w-lg text-sm leading-relaxed text-white/85 sm:text-base">{t.home.text}</p>
           <div className="mt-7">
             <Link href="/xizmatlar" className="btn hero-btn">{t.home.browse} <ArrowRight className="h-4 w-4" /></Link>
           </div>
@@ -36,7 +36,7 @@ export function HomeView() {
       </section>
 
       {top.length > 0 && (
-        <section className="rounded-3xl bg-gradient-to-br from-brand-50 to-white p-4 ring-1 ring-brand/10 sm:p-6">
+        <section className="rounded-3xl bg-gradient-to-br from-brand-50 to-white p-4 ring-1 ring-brand/10 dark:from-[#25223A] dark:to-[#1A1918] dark:ring-white/10 sm:p-6">
           <div className="mb-4 flex items-center gap-3">
             <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-brand text-white"><Flame className="h-5 w-5" /></span>
             <div>

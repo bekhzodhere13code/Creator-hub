@@ -11,7 +11,7 @@ export function Landing() {
         <div className="relative max-w-2xl">
           <span className="inline-block rounded-full bg-white/10 px-3 py-1 text-xs font-semibold">{t.home.badge}</span>
           <h1 className="mt-4 text-balance text-4xl font-extrabold leading-[1.05] sm:text-6xl">{t.home.title}</h1>
-          <p className="mt-4 max-w-lg text-sm leading-relaxed text-slate-300 sm:text-base">{t.home.text}</p>
+          <p className="mt-4 max-w-lg text-sm leading-relaxed text-white/85 sm:text-base">{t.home.text}</p>
           <div className="mt-8 flex flex-wrap gap-3">
             <Link href="/sign-up" className="btn hero-btn">{t.onboard.landingCta} <ArrowRight className="h-4 w-4" /></Link>
             <Link href="/sign-in" className="btn border border-white/25 text-white hover:bg-white/10">{t.nav.signIn}</Link>

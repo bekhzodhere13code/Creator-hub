@@ -18,9 +18,9 @@ export function AuthShell({
         <Logo dark />
         <div className="max-w-md">
           <h1 className="font-display text-4xl font-extrabold leading-tight">{heading}</h1>
-          {text && <p className="mt-4 text-sm leading-relaxed text-slate-300">{text}</p>}
+          {text && <p className="mt-4 text-sm leading-relaxed text-white/85">{text}</p>}
           {points && (
-            <ul className="mt-8 space-y-3 text-sm text-slate-200">
+            <ul className="mt-8 space-y-3 text-sm text-white/90">
               {points.map((p) => (
                 <li key={p} className="flex items-center gap-3">
                   <span className="flex h-5 w-5 items-center justify-center rounded-full bg-white/10">
@@ -32,7 +32,7 @@ export function AuthShell({
             </ul>
           )}
         </div>
-        <p className="text-xs text-slate-500">© {new Date().getFullYear()} Creator Hub</p>
+        <p className="text-xs text-white/60">© {new Date().getFullYear()} Creator Hub</p>
       </aside>
       <section className="flex flex-col items-center justify-center px-4 py-8 sm:px-8">
         <Logo className="mb-6 lg:hidden" />
