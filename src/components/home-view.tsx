@@ -14,15 +14,13 @@ export function HomeView() {
 
   return (
     <div className="space-y-12">
-      <section className="relative overflow-hidden rounded-3xl bg-[#0A0A1F] p-6 text-white sm:p-10">
-        <div className="pointer-events-none absolute -right-24 -top-24 h-72 w-72 rounded-full bg-brand/50 blur-3xl" aria-hidden="true" />
-        <div className="pointer-events-none absolute -bottom-32 left-1/3 h-64 w-64 rounded-full bg-[#FF6B6B]/25 blur-3xl" aria-hidden="true" />
+      <section className="relative overflow-hidden rounded-3xl hero-gradient p-6 text-white sm:p-10">
         <div className="relative max-w-2xl">
           <span className="inline-block rounded-full bg-white/10 px-3 py-1 text-xs font-semibold">{t.home.badge}</span>
           <h1 className="mt-4 text-balance text-3xl font-extrabold leading-[1.05] sm:text-5xl">{me.account_type === "client" ? t.extra.clientHome : t.home.title}</h1>
           <p className="mt-4 max-w-lg text-sm leading-relaxed text-slate-300 sm:text-base">{t.home.text}</p>
           <div className="mt-7">
-            <Link href="/xizmatlar" className="btn bg-white text-ink hover:bg-slate-100">{t.home.browse} <ArrowRight className="h-4 w-4" /></Link>
+            <Link href="/xizmatlar" className="btn hero-btn">{t.home.browse} <ArrowRight className="h-4 w-4" /></Link>
           </div>
         </div>
         <div className="relative mt-8 grid gap-3 sm:grid-cols-2">

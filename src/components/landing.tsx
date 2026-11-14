@@ -7,15 +7,13 @@ export function Landing() {
   const { t } = useT();
   return (
     <div className="space-y-12">
-      <section className="relative overflow-hidden rounded-3xl bg-[#0A0A1F] p-6 text-white sm:p-12">
-        <div className="pointer-events-none absolute -right-24 -top-24 h-80 w-80 animate-pulse rounded-full bg-brand/50 blur-3xl" aria-hidden="true" />
-        <div className="pointer-events-none absolute -bottom-32 left-1/3 h-64 w-64 rounded-full bg-[#FF6B6B]/25 blur-3xl" aria-hidden="true" />
+      <section className="relative overflow-hidden rounded-3xl hero-gradient p-6 text-white sm:p-12">
         <div className="relative max-w-2xl">
           <span className="inline-block rounded-full bg-white/10 px-3 py-1 text-xs font-semibold">{t.home.badge}</span>
           <h1 className="mt-4 text-balance text-4xl font-extrabold leading-[1.05] sm:text-6xl">{t.home.title}</h1>
           <p className="mt-4 max-w-lg text-sm leading-relaxed text-slate-300 sm:text-base">{t.home.text}</p>
           <div className="mt-8 flex flex-wrap gap-3">
-            <Link href="/sign-up" className="btn bg-white text-ink hover:bg-slate-100">{t.onboard.landingCta} <ArrowRight className="h-4 w-4" /></Link>
+            <Link href="/sign-up" className="btn hero-btn">{t.onboard.landingCta} <ArrowRight className="h-4 w-4" /></Link>
             <Link href="/sign-in" className="btn border border-white/25 text-white hover:bg-white/10">{t.nav.signIn}</Link>
           </div>
         </div>

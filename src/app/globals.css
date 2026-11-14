@@ -50,10 +50,12 @@ main > div { animation: rise .3s ease-out; }
 
 /* Tungi rejim: iliq, tekis kulrang-qora. Neon yorug‘lik, gradient va rangli soyalarsiz. */
 :root {
+  --ink: 11 11 30; --ink-soft: 91 91 115; --surface: 244 245 250;
   --c-text: #0B0B1E; --c-soft: #5B5B73; --c-card: #FFFFFF; --c-input: #FFFFFF;
 }
 .dark {
   color-scheme: dark;
+  --ink: 236 232 225; --ink-soft: 162 157 148; --surface: 21 20 19;
   --c-text: #ECE8E1; --c-soft: #A29D94; --c-card: #1D1C1A; --c-input: #252320;
 }
 .dark body { background-color: #151413; color: #ECE8E1; background-image: none; }
@@ -78,8 +80,16 @@ main > div { animation: rise .3s ease-out; }
 .dark .bg-brand { background-color: #6C58EE; }
 .dark [class*="shadow-brand"], .dark [class*="shadow-black"] { box-shadow: none; }
 .dark .card-hover:hover { border-color: #4A463F; box-shadow: none; }
-.dark .hero-surface { background-color: #1D1C1A; border: 1px solid #34312D; box-shadow: none; }
-.dark .auth-aside { background-color: #1D1C1A; border-right: 1px solid #34312D; }
-/* Landing/Home’dagi qora hero bloklari: dark rejimda tekis, yorug‘liksiz */
-.dark [class*="bg-[#0A0A1F]"] { background-color: #1D1C1A; border: 1px solid #34312D; }
 .dark .blur-3xl, .dark .bg-grid { display: none; }
+
+/* Hover: dark rejimda ochiq fon + och matn (o‘qib bo‘lmaydigan) holat bo‘lmasin */
+.dark .btn-outline:hover, .dark .btn-ghost:hover { background-color: #2F2D29; color: #ECE8E1; }
+.dark .hover\:bg-red-50:hover { background-color: #3A2222; }
+.dark .hover\:text-red-600:hover { color: #F28B82; }
+.dark .hover\:border-slate-300:hover { border-color: #4A463F; }
+
+/* Home hero: qora blok o‘rniga gradient */
+.hero-gradient { background-image: linear-gradient(135deg, #3A14FF 0%, #6A3BEA 50%, #A83FA0 100%); }
+.dark .hero-gradient { background-image: linear-gradient(135deg, #2B2268 0%, #43308C 52%, #6E2F66 100%); border: 0; }
+.hero-btn, .dark .hero-btn { background-color: #FFFFFF; color: #0B0B1E; box-shadow: none; }
+.hero-btn:hover, .dark .hero-btn:hover { background-color: #F1EEFF; color: #0B0B1E; }

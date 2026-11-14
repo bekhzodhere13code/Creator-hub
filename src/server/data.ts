@@ -11,13 +11,17 @@ export type AppData = {
   orders: Order[];
 };
 
-type ProfileRow = Profile & { account_type: string | null; tg_chat_id: number | null; tg_link_code: string | null; language: string | null };
+type ProfileRow = Profile & { claimed?: boolean; banned?: boolean; account_type: string | null; tg_chat_id: number | null; tg_link_code: string | null; language: string | null };
 
 /** Firebase foydalanuvchisi uchun profil yozuvi yo‘q bo‘lsa yaratadi (birinchi kirishda). */
 export async function ensureProfile(userId: string): Promise<ProfileRow> {
   const db = admin();
   const { data: existing } = await db.from("profiles").select("*").eq("id", userId).maybeSingle();
-  if (existing) return existing as ProfileRow;
+  if (existing) {
+    // Eski (hali tizimga kirmagan) profil birinchi kirishda "egasi bor" deb belgilanadi
+    if (!(existing as ProfileRow).claimed) await db.from("profiles").update({ claimed: true }).eq("id", userId);
+    return { ...(existing as ProfileRow), claimed: true };
+  }
   const u = await getSession();
   const row = {
     id: userId,
@@ -25,6 +29,7 @@ export async function ensureProfile(userId: string): Promise<ProfileRow> {
     last_name: (u?.lastName ?? "").slice(0, 40),
     specialties: [] as string[],
     avatar_url: null, // profil rasmini foydalanuvchining o‘zi yuklaydi
+    claimed: true,
   };
   const { data, error } = await db.from("profiles").upsert(row, { onConflict: "id", ignoreDuplicates: true }).select("*").maybeSingle();
   if (error) throw error;
@@ -72,7 +77,8 @@ export async function loadAppData(userId: string): Promise<AppData> {
   const db = admin();
   const meRow = await ensureProfile(userId);
   const [profiles, services, portfolio, orders, sold] = await Promise.all([
-    db.from("profiles").select("*").order("created_at", { ascending: false }).limit(500),
+    // Faqat tizimga kirgan (claimed) va bloklanmagan foydalanuvchilar ko‘rinadi
+    db.from("profiles").select("*").eq("claimed", true).eq("banned", false).order("created_at", { ascending: false }).limit(500),
     db.from("services").select("*").or(`status.eq.active,owner_id.eq.${userId}`).order("created_at", { ascending: false }).limit(500),
     db.from("portfolio").select("*").order("created_at", { ascending: false }).limit(1000),
     db.from("orders").select("*").or(`client_id.eq.${userId},owner_id.eq.${userId}`).order("created_at", { ascending: false }).limit(200),
@@ -90,11 +96,12 @@ export async function loadAppData(userId: string): Promise<AppData> {
     .filter((p) => p.id !== userId && ((p.first_name ?? "").trim() || (p.last_name ?? "").trim()))
     .map(publicProfile);
 
+  const visible = new Set<string>([userId, ...list.map((p) => p.id)]);
   return {
     me,
     profiles: [me, ...list],
-    services: (services.data as Service[]).map((s) => ({ ...s, price: s.price == null ? null : Number(s.price), sold_count: soldBy.get(s.id) ?? 0 })),
-    portfolio: portfolio.data as PortfolioItem[],
+    services: (services.data as Service[]).filter((s) => Boolean(s.owner_id) && visible.has(s.owner_id as string)).map((s) => ({ ...s, price: s.price == null ? null : Number(s.price), sold_count: soldBy.get(s.id) ?? 0 })),
+    portfolio: (portfolio.data as PortfolioItem[]).filter((w) => visible.has(w.owner_id)),
     orders: await Promise.all((orders.data as Record<string, unknown>[]).map((o) => shapeOrder(userId, o, clickByOwner.get(o.owner_id as string) ?? null))),
   };
 }
