@@ -1,18 +1,20 @@
 "use client";
 import { useState } from "react";
-import { Pencil, Plus, Trash2 } from "lucide-react";
+import { Pencil, Plus, Star, Trash2 } from "lucide-react";
 import { Empty, PageHead, ServiceCard, catLabel } from "./cards";
 import { FormError, Label, SocialFields, useFormAction } from "./form-bits";
 import { Modal } from "./modal";
 import { TelegramCard } from "./telegram-card";
+import { WalletCard } from "./wallet-card";
 import { readImage } from "@/lib/image";
 import { useT } from "@/lib/i18n-client";
 import { useStore } from "@/lib/store";
-import { CATEGORIES, normalizeUrl, type ServiceWithOwner } from "@/lib/utils";
+import { CATEGORIES, DEFAULT_DEPOSIT, DEPOSIT_OPTIONS, FEATURE_DAYS, FEATURE_PRICE, formatPrice, isFeatured, normalizeUrl, type ServiceWithOwner } from "@/lib/utils";
 
 export function ServiceManager() {
   const { t } = useT();
-  const { me, data, withOwner, deleteService } = useStore();
+  const { me, data, withOwner, deleteService, featureService } = useStore();
+  const [notice, setNotice] = useState<{ tone: "ok" | "err"; text: string } | null>(null);
   const services = data.services.filter((s) => s.owner_id === me.id).map(withOwner);
   if (me.account_type !== "creator") return <Empty text={t.extra.creatorsView} />;
   const [editing, setEditing] = useState<ServiceWithOwner | "new" | null>(null);
@@ -23,15 +25,32 @@ export function ServiceManager() {
   const add = () => (needsSocials ? setSocialOpen(true) : setEditing("new"));
   const afterSocial = () => { setSocialOpen(false); setEditing("new"); };
 
+  const feature = async (s: ServiceWithOwner) => {
+    const price = formatPrice(FEATURE_PRICE) ?? "";
+    const tpl = me.is_admin ? t.wallet.featureConfirmAdmin : t.wallet.featureConfirm;
+    if (!confirm(tpl.replace("{title}", s.title).replace("{days}", String(FEATURE_DAYS)).replace("{price}", price))) return;
+    const r = await featureService(s.id);
+    setNotice(r.ok ? { tone: "ok", text: t.wallet.done } : { tone: "err", text: r.error });
+  };
+
   return (
     <>
       {!me.tg_linked && <div className="mb-5"><TelegramCard note={t.extra.tgNeed} /></div>}
+      <div className="mb-5"><WalletCard /></div>
+      {notice && <p role={notice.tone === "err" ? "alert" : "status"} className={`mb-5 rounded-lg px-3 py-2 text-sm ${notice.tone === "err" ? "bg-red-50 text-red-700" : "bg-emerald-50 text-emerald-800"}`}>{notice.text}</p>}
       <PageHead title={t.my.title} action={<button onClick={add} className="btn btn-primary"><Plus className="h-4 w-4" /> {t.my.add}</button>} />
       {services.length ? (
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
           {services.map((s) => (
             <div key={s.id} className="space-y-2">
               <ServiceCard s={s} t={t} />
+              {s.status === "active" && (
+                <button onClick={() => void feature(s)} className="btn btn-outline w-full !py-2 border-amber-300 text-amber-800 hover:bg-amber-50">
+                  <Star className="h-4 w-4" />
+                  {isFeatured(s) ? `${t.wallet.extend} (${me.is_admin ? t.wallet.adminFree : t.wallet.featureInfo.replace("{price}", formatPrice(FEATURE_PRICE) ?? "").replace("{days}", String(FEATURE_DAYS))})` : `${t.wallet.feature} · ${me.is_admin ? t.wallet.adminFree : t.wallet.featureInfo.replace("{price}", formatPrice(FEATURE_PRICE) ?? "").replace("{days}", String(FEATURE_DAYS))}`}
+                </button>
+              )}
+              {isFeatured(s) && <p className="text-xs font-medium text-amber-800">⭐ {t.wallet.featured}: {new Date(s.featured_until as string).toLocaleDateString("ru-RU")} {t.wallet.until}</p>}
               <div className="flex gap-2">
                 <button onClick={() => setEditing(s)} className="btn btn-outline flex-1 !py-2"><Pencil className="h-4 w-4" /> {t.my.edit}</button>
                 <button onClick={() => { if (confirm(t.my.confirmDelete)) void deleteService(s.id); }} className="btn btn-outline !py-2 text-red-600" aria-label={t.my.delete}><Trash2 className="h-4 w-4" /></button>
@@ -97,6 +116,7 @@ function ServiceForm({ service, onDone }: { service: ServiceWithOwner | null; on
       category: String(fd.get("category")) as (typeof CATEGORIES)[number],
       price: priceRaw ? Number(priceRaw) : null,
       status: fd.get("active") === "on" ? "active" : "inactive",
+      deposit_percent: Number(fd.get("deposit_percent")) || DEFAULT_DEPOSIT,
       work_area: String(fd.get("work_area") ?? "").trim() || null,
       click_number: String(fd.get("click_number") ?? "").replace(/[^\d+ ]/g, "").trim() || null,
       image,
@@ -115,6 +135,11 @@ function ServiceForm({ service, onDone }: { service: ServiceWithOwner | null; on
         </Label>
         <Label text={t.my.fPrice}><input name="price" inputMode="numeric" pattern="[0-9 ]*" defaultValue={service?.price ?? ""} placeholder={t.extra.phPrice} className="field" /></Label>
       </div>
+      <Label text={t.pay.fDeposit} hint={t.pay.fDepositHint}>
+        <select name="deposit_percent" defaultValue={service?.deposit_percent ?? DEFAULT_DEPOSIT} className="field">
+          {DEPOSIT_OPTIONS.map((p) => <option key={p} value={p}>{t.pay[`opt${p}` as "opt30" | "opt50" | "opt70" | "opt100"]}</option>)}
+        </select>
+      </Label>
       <Label text={t.extra.workArea} hint={t.extra.workAreaHint}><input name="work_area" maxLength={120} defaultValue={service?.work_area ?? ""} placeholder={t.extra.workAreaPh} className="field" /></Label>
       {!me.click_number && (
         <Label text={t.profile.click} hint={t.profile.clickHint}><input name="click_number" required inputMode="tel" maxLength={30} placeholder={t.extra.phCard} className="field" /></Label>

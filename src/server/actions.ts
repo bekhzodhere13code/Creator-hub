@@ -1,13 +1,13 @@
 "use server";
 import { randomBytes } from "node:crypto";
-import { getSession } from "./session";
+import { getSession, isAdminSession } from "./session";
 import { z } from "zod";
 import { admin } from "./supabase";
 import { ensureProfile, loadOrder } from "./data";
-import { createOrderFor, decideOrderFor, markOrderPaidFor } from "./orders";
+import { createOrderFor, decideFinalFor, decideOrderFor, markDeliveredFor, markFinalPaidFor, markOrderPaidFor } from "./orders";
 import { removeMedia, uploadDataUrl } from "./media";
 import { getBotUsername, telegramEnabled } from "./telegram";
-import { CATEGORIES, normalizeUrl, youtubeId, type Order } from "@/lib/utils";
+import { CATEGORIES, DEFAULT_DEPOSIT, DEPOSIT_OPTIONS, FEATURE_DAYS, FEATURE_PRICE, normalizeUrl, youtubeId, type Order } from "@/lib/utils";
 
 type Ok<T = object> = { ok: true } & T;
 type Fail = { ok: false; error: string };
@@ -99,6 +99,7 @@ const serviceSchema = z.object({
   price: z.number().int().positive().max(1_000_000_000).nullable(),
   status: z.enum(["active", "inactive"]),
   work_area: text(120).nullish(),
+  deposit_percent: z.number().int().refine((v) => (DEPOSIT_OPTIONS as readonly number[]).includes(v)).optional(),
   click_number: z.string().trim().max(30).regex(/^[\d+ ]*$/).nullish(),
   image: dataUrl,
 });
@@ -116,6 +117,7 @@ export async function saveServiceAction(input: z.input<typeof serviceSchema>): P
     if (!card) return { ok: false, error: "Karta raqamini kiriting" };
     if (card !== prof.click_number) await db.from("profiles").update({ click_number: card }).eq("id", userId);
     const row: Record<string, unknown> = { title: p.data.title, description: p.data.description, category: p.data.category, price: p.data.price, status: p.data.status, work_area: p.data.work_area?.trim() || null };
+    if (p.data.deposit_percent != null) row.deposit_percent = p.data.deposit_percent;
     if (p.data.id) {
       const { data: cur } = await db.from("services").select("owner_id,image_url").eq("id", p.data.id).maybeSingle();
       if (!cur || cur.owner_id !== userId) return { ok: false, error: "Topilmadi" };
@@ -124,6 +126,7 @@ export async function saveServiceAction(input: z.input<typeof serviceSchema>): P
       if (error) throw error;
     } else {
       if (p.data.image) row.image_url = await uploadDataUrl(userId, p.data.image, "services");
+      if (row.deposit_percent == null) row.deposit_percent = DEFAULT_DEPOSIT;
       const { error } = await db.from("services").insert({ ...row, owner_id: userId });
       if (error) throw error;
     }
@@ -224,6 +227,67 @@ export async function cancelOrderAction(orderId: string): Promise<Ok | Fail> {
     const { data } = await admin().from("orders").update({ status: "cancelled", decided_at: new Date().toISOString() }).eq("id", orderId).eq("client_id", userId).eq("status", "pending").select("id");
     return data?.length ? { ok: true } : { ok: false, error: "Buyurtmani bekor qilib bo‘lmadi" };
   });
+}
+
+/** Mutaxassis: ish tayyor (yakuniy to‘lov so‘raladi). */
+export async function markDeliveredAction(orderId: string): Promise<Ok<{ status: string }> | { ok: false; error: string }> {
+  try {
+    const userId = await uid();
+    return await markDeliveredFor(userId, orderId);
+  } catch (e) {
+    console.error("[markDelivered]", e);
+    return { ok: false, error: "failed" };
+  }
+}
+
+/** Mijoz: yakuniy to‘lov qilindi. */
+export async function markFinalPaidAction(orderId: string): Promise<Ok<{ status: string; notified?: boolean }> | { ok: false; error: string }> {
+  try {
+    const userId = await uid();
+    return await markFinalPaidFor(userId, orderId);
+  } catch (e) {
+    console.error("[markFinalPaid]", e);
+    return { ok: false, error: "failed" };
+  }
+}
+
+/** Mutaxassis: yakuniy to‘lovni tasdiqlaydi / rad etadi. */
+export async function decideFinalAction(orderId: string, yes: boolean): Promise<Ok<{ status: string }> | { ok: false; error: string }> {
+  try {
+    const userId = await uid();
+    return await decideFinalFor(userId, orderId, yes);
+  } catch (e) {
+    console.error("[decideFinal]", e);
+    return { ok: false, error: "failed" };
+  }
+}
+
+/* ---------- Bosh sahifaga chiqarish ---------- */
+/** Xizmatni FEATURE_DAYS kunga bosh sahifaga chiqaradi. Oddiy foydalanuvchida ichki balansdan FEATURE_PRICE yechiladi, admin uchun bepul. */
+export async function featureServiceAction(serviceId: string): Promise<Ok<{ balance?: number }> | { ok: false; error: string }> {
+  try {
+    const session = await getSession();
+    if (!session) return { ok: false, error: "failed" };
+    if (!z.string().uuid().safeParse(serviceId).success) return { ok: false, error: "notFound" };
+    const db = admin();
+    if (isAdminSession(session)) {
+      const { data: cur } = await db.from("services").select("owner_id,status,featured_until").eq("id", serviceId).maybeSingle();
+      if (!cur || cur.owner_id !== session.uid) return { ok: false, error: "notFound" };
+      if (cur.status !== "active") return { ok: false, error: "inactive" };
+      const base = cur.featured_until && new Date(cur.featured_until).getTime() > Date.now() ? new Date(cur.featured_until).getTime() : Date.now();
+      const { error } = await db.from("services").update({ featured_until: new Date(base + FEATURE_DAYS * 864e5).toISOString() }).eq("id", serviceId);
+      if (error) throw error;
+      return { ok: true };
+    }
+    await ensureProfile(session.uid);
+    const { data, error } = await db.rpc("feature_service", { p_user: session.uid, p_service: serviceId, p_days: FEATURE_DAYS, p_price: FEATURE_PRICE });
+    if (error) throw error;
+    const r = data as { ok: boolean; error?: string; balance?: number };
+    return r.ok ? { ok: true, balance: r.balance } : { ok: false, error: r.error ?? "failed" };
+  } catch (e) {
+    console.error("[featureService]", e);
+    return { ok: false, error: "failed" };
+  }
 }
 
 /** Buyurtma sahifasi polling uchun: faqat o‘zingizning buyurtmangiz. */

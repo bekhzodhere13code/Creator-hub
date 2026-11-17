@@ -6,6 +6,7 @@ import type { Order, PortfolioItem, Profile, Service, ServiceWithOwner } from ".
 import {
   addPortfolioAction, cancelOrderAction, createOrderAction, decideOrderAction, deletePortfolioAction,
   deleteServiceAction, markPaidAction, saveProfileAction, saveServiceAction, saveSocialsAction, getOrderAction,
+  markDeliveredAction, markFinalPaidAction, decideFinalAction, featureServiceAction,
 } from "@/server/actions";
 
 export type AppSnapshot = { me: Profile; profiles: Profile[]; services: Service[]; portfolio: PortfolioItem[]; orders: Order[] };
@@ -31,6 +32,10 @@ type Store = {
   markPaid: (id: string) => Promise<Res<{ notified?: boolean }>>;
   decideOrder: (id: string, yes: boolean) => Promise<Res<{ status?: string }>>;
   cancelOrder: (id: string) => Promise<Res>;
+  markDelivered: (id: string) => Promise<Res>;
+  markFinalPaid: (id: string) => Promise<Res>;
+  decideFinal: (id: string, yes: boolean) => Promise<Res>;
+  featureService: (serviceId: string) => Promise<Res<{ balance?: number }>>;
   pollOrder: (id: string) => Promise<Order | null>;
 };
 
@@ -88,6 +93,26 @@ export function StoreProvider({ snapshot, children }: { snapshot: AppSnapshot; c
         return r.ok ? { ok: true, status: r.status } : { ok: false, error: r.error === "already" ? t.order.sConfirmed : r.error === "expired" ? t.order.sExpired : t.common.error };
       },
       cancelOrder: mut(cancelOrderAction),
+      markDelivered: async (id) => {
+        const r = await markDeliveredAction(id);
+        router.refresh();
+        return r.ok ? { ok: true } : { ok: false, error: r.error === "already" ? t.pay.inProgressTitle : t.common.error };
+      },
+      markFinalPaid: async (id) => {
+        const r = await markFinalPaidAction(id);
+        router.refresh();
+        return r.ok ? { ok: true } : { ok: false, error: r.error === "already" ? t.order.sPending : t.common.error };
+      },
+      decideFinal: async (id, yes) => {
+        const r = await decideFinalAction(id, yes);
+        router.refresh();
+        return r.ok ? { ok: true } : { ok: false, error: r.error === "already" ? t.pay.sCompleted : t.common.error };
+      },
+      featureService: async (id) => {
+        const r = await featureServiceAction(id);
+        if (r.ok) { router.refresh(); return r; }
+        return { ok: false, error: r.error === "balance" ? t.wallet.noBalance : r.error === "inactive" ? t.wallet.needActive : t.common.error };
+      },
       pollOrder: (id) => getOrderAction(id),
     };
   }, [snapshot, router, refresh, t]);

@@ -1,9 +1,9 @@
 import Image from "next/image";
 import Link from "next/link";
-import { Camera, Film, Flame, ImageIcon, MapPin, Palette, PenLine, Sparkles, TrendingUp } from "lucide-react";
+import { Camera, Film, Flame, ImageIcon, MapPin, Palette, PenLine, Sparkles, Star, TrendingUp } from "lucide-react";
 import { Avatar } from "./avatar";
 import type { Dict } from "@/lib/i18n";
-import { fullName, formatPrice, gradientFor, type Profile, type ServiceWithOwner } from "@/lib/utils";
+import { fullName, formatPrice, gradientFor, isFeatured, type Profile, type ServiceWithOwner } from "@/lib/utils";
 
 const CAT_ICONS = { mobilografiya: Camera, foto: ImageIcon, smm: TrendingUp, kontent: PenLine, montaj: Film, dizayn: Palette, boshqa: Sparkles } as const;
 
@@ -25,6 +25,7 @@ export function ServiceCard({ s, t, href }: { s: ServiceWithOwner; t: Dict; href
           </div>
         )}
         <span className="absolute left-3 top-3 rounded-full bg-white/90 px-2.5 py-1 text-xs font-semibold text-ink backdrop-blur">{catLabel(t, s.category)}</span>
+        {isFeatured(s) && <span className="absolute bottom-3 left-3 inline-flex items-center gap-1 rounded-full bg-amber-400 px-2.5 py-1 text-xs font-bold text-amber-950"><Star className="h-3 w-3 fill-current" /> {t.wallet.badge}</span>}
         {s.status === "inactive" && <span className="absolute right-3 top-3 rounded-full bg-ink/80 px-2.5 py-1 text-xs font-semibold text-white">{t.service.inactive}</span>}
       </div>
       <div className="flex flex-1 flex-col gap-2 p-4">

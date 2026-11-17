@@ -8,7 +8,7 @@ import { Avatar } from "@/components/avatar";
 import { Empty, catLabel } from "@/components/cards";
 import { useT } from "@/lib/i18n-client";
 import { useStore } from "@/lib/store";
-import { formatPrice, fullName, gradientFor } from "@/lib/utils";
+import { DEFAULT_DEPOSIT, formatPrice, fullName, gradientFor, splitPrice } from "@/lib/utils";
 
 export default function ServicePage() {
   const { id } = useParams<{ id: string }>();
@@ -23,6 +23,8 @@ export default function ServicePage() {
   const price = formatPrice(service.price);
   const own = service.owner_id === me.id;
   const hasClick = Boolean(profile(service.owner_id)?.has_click);
+  const percent = service.deposit_percent ?? DEFAULT_DEPOSIT;
+  const { deposit, final } = splitPrice(service.price, percent);
 
   const order = async () => {
     setError(""); setBusy(true);
@@ -52,6 +54,11 @@ export default function ServicePage() {
             <p className="font-display text-2xl font-extrabold">{price ? `${price} ${t.common.sum}` : t.service.negotiable}</p>
           </div>
           <p className="whitespace-pre-line text-sm leading-relaxed text-ink-soft">{service.description}</p>
+          <div className="space-y-1.5 rounded-xl border border-slate-200 p-4 text-sm">
+            <p className="font-semibold">{t.pay.terms}</p>
+            <p className="flex justify-between gap-3"><span className="text-ink-soft">{percent >= 100 ? t.pay.fullNow : `${t.pay.depositNow} · ${percent}%`}</span><b>{deposit != null ? `${formatPrice(deposit)} ${t.common.sum}` : `${percent}%`}</b></p>
+            {percent < 100 && <p className="flex justify-between gap-3"><span className="text-ink-soft">{t.pay.finalLater} · {100 - percent}%</span><b>{final != null ? `${formatPrice(final)} ${t.common.sum}` : `${100 - percent}%`}</b></p>}
+          </div>
           {service.work_area && <p className="flex items-center gap-1.5 text-sm font-medium"><MapPin className="h-4 w-4 text-brand" /> {service.work_area}</p>}
           {service.owner && (
             <Link href={`/creator/${service.owner.id}`} className="flex items-center gap-3 rounded-xl bg-surface p-3">

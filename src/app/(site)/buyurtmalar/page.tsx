@@ -16,7 +16,10 @@ export default function OrdersPage() {
     const STATE = {
       new: [t.order.sNew, "bg-slate-100 text-ink-soft"],
       pending: [o.owner_id === me.id ? t.order.pendingBadge : t.order.sPending, "bg-amber-50 text-amber-800"],
-      confirmed: [t.order.sConfirmed, "bg-emerald-50 text-emerald-700"],
+      confirmed: [t.pay.sInProgress, "bg-emerald-50 text-emerald-700"],
+      delivered: [t.pay.sDelivered, "bg-amber-50 text-amber-800"],
+      final_pending: [o.owner_id === me.id ? t.order.pendingBadge : t.pay.sFinalPending, "bg-amber-50 text-amber-800"],
+      completed: [t.pay.sCompleted, "bg-emerald-100 text-emerald-800"],
       rejected: [t.order.sRejected, "bg-red-50 text-red-700"],
       expired: [t.order.sExpired, "bg-slate-100 text-ink-soft"],
       cancelled: [t.order.sCancelled, "bg-slate-100 text-ink-soft"],

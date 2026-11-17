@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { admin } from "@/server/supabase";
-import { decideOrderFor } from "@/server/orders";
+import { decideFinalFor, decideOrderFor } from "@/server/orders";
 import { LOGIN_TTL_MS } from "@/server/tg-login";
 import { TG_TEXT, tg, tgLang } from "@/server/telegram";
 
@@ -49,7 +49,7 @@ export async function POST(req: Request) {
       }
     }
 
-    // Tugma: o:<orderId>:y|n
+    // Tugma: o:<orderId>:y|n (avans), f:<orderId>:y|n (yakuniy to‘lov)
     const cb = u.callback_query;
     const lc = cb?.data ? /^l:([A-Za-z0-9_-]{16,40})$/.exec(cb.data) : null;
     if (cb && lc) {
@@ -62,15 +62,16 @@ export async function POST(req: Request) {
         await tg("editMessageText", { chat_id: cb.message.chat.id, message_id: cb.message.message_id, text: T.loginDone });
       }
     } else if (cb?.data) {
-      const m = /^o:([0-9a-f-]{36}):(y|n)$/.exec(cb.data);
+      const m = /^([of]):([0-9a-f-]{36}):(y|n)$/.exec(cb.data);
       if (m) {
         const { data: seller } = await db.from("profiles").select("id, language").eq("tg_chat_id", cb.from.id).maybeSingle();
         const T = TG_TEXT[tgLang(seller?.language)];
         if (!seller) {
           await tg("answerCallbackQuery", { callback_query_id: cb.id, text: T.badCode, show_alert: true });
         } else {
-          const r = await decideOrderFor(seller.id, m[1], m[2] === "y");
-          const note = r.ok ? (r.status === "confirmed" ? T.yes : T.no) : r.error === "expired" ? T.expired : T.already;
+          const yes = m[3] === "y";
+          const r = m[1] === "o" ? await decideOrderFor(seller.id, m[2], yes) : await decideFinalFor(seller.id, m[2], yes);
+          const note = r.ok ? (yes ? T.yes : T.no) : "error" in r && r.error === "expired" ? T.expired : T.already;
           await tg("answerCallbackQuery", { callback_query_id: cb.id, text: note.replace(/<[^>]+>/g, "") });
           if (!r.ok && cb.message) {
             await tg("editMessageReplyMarkup", { chat_id: cb.message.chat.id, message_id: cb.message.message_id, reply_markup: { inline_keyboard: [] } });

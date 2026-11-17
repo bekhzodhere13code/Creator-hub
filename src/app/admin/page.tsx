@@ -13,13 +13,14 @@ export const dynamic = "force-dynamic";
 export const metadata: Metadata = { title: "Admin panel", robots: { index: false, follow: false } };
 
 type P = { id: string; first_name: string | null; last_name: string | null; specialties: string[] | null; account_type: string | null; tg_chat_id: number | null; telegram: string | null; click_number: string | null; created_at: string; claimed: boolean; banned: boolean };
-type S = { id: string; owner_id: string; title: string; description: string | null; category: string | null; price: number | null; status: string; created_at: string };
-type O = { id: string; service_id: string | null; service_title: string; price: number | null; client_id: string; owner_id: string; status: string; expires_at: string | null; created_at: string };
+type S = { id: string; owner_id: string; title: string; description: string | null; category: string | null; price: number | null; status: string; created_at: string; featured_until: string | null };
+type O = { id: string; service_id: string | null; service_title: string; price: number | null; deposit_amount: number | null; client_id: string; owner_id: string; status: string; expires_at: string | null; created_at: string };
 
 const fmt = (d?: string | number | Date | null) => (d ? new Date(d).toLocaleString("ru-RU", { timeZone: "Asia/Tashkent", dateStyle: "short", timeStyle: "short" }) : "—");
 const sum = (n?: number | null) => (n ? `${new Intl.NumberFormat("ru-RU").format(n)} so‘m` : "—");
 const ROLE: Record<string, string> = { client: "Mijoz", creator: "Ijodkor" };
-const STATUS: Record<string, string> = { new: "Yangi", pending: "Kutilmoqda", confirmed: "To‘langan", rejected: "Rad etilgan", cancelled: "Bekor", expired: "Muddati o‘tgan" };
+const STATUS: Record<string, string> = { new: "Avans kutilmoqda", pending: "Avans tekshirilmoqda", confirmed: "Jarayonda (avans to‘landi)", delivered: "Ish tayyor, yakuniy to‘lov kutilmoqda", final_pending: "Yakuniy to‘lov tekshirilmoqda", completed: "Yakunlangan", rejected: "Rad etilgan", cancelled: "Bekor", expired: "Muddati o‘tgan" };
+const PAID = ["confirmed", "delivered", "final_pending", "completed"];
 
 function Th({ children }: { children: React.ReactNode }) { return <th className="whitespace-nowrap px-3 py-2 text-left text-xs font-semibold uppercase tracking-wide text-ink-soft">{children}</th>; }
 function Td({ children, strong }: { children: React.ReactNode; strong?: boolean }) { return <td className={`whitespace-nowrap px-3 py-2 text-sm ${strong ? "font-semibold" : ""}`}>{children}</td>; }
@@ -42,8 +43,8 @@ export default async function AdminPage() {
   const [fb, profiles, services, orders, portfolio] = await Promise.all([
     adminAuth().listUsers(1000),
     db.from("profiles").select("id,first_name,last_name,specialties,account_type,tg_chat_id,telegram,click_number,created_at,claimed,banned").order("created_at", { ascending: false }).limit(1000),
-    db.from("services").select("id,owner_id,title,description,category,price,status,created_at").order("created_at", { ascending: false }).limit(1000),
-    db.from("orders").select("id,service_id,service_title,price,client_id,owner_id,status,expires_at,created_at").order("created_at", { ascending: false }).limit(1000),
+    db.from("services").select("id,owner_id,title,description,category,price,status,created_at,featured_until").order("created_at", { ascending: false }).limit(1000),
+    db.from("orders").select("id,service_id,service_title,price,deposit_amount,client_id,owner_id,status,expires_at,created_at").order("created_at", { ascending: false }).limit(1000),
     db.from("portfolio").select("owner_id").limit(5000),
   ]);
   for (const r of [profiles, services, orders, portfolio]) if (r.error) throw r.error;
@@ -61,9 +62,10 @@ export default async function AdminPage() {
   const countBy = (rows: { owner_id: string }[]) => { const m = new Map<string, number>(); for (const r of rows) m.set(r.owner_id, (m.get(r.owner_id) ?? 0) + 1); return m; };
   const svcCount = countBy(S), portCount = countBy(portfolio.data as { owner_id: string }[]);
   const soldBy = new Map<string, number>();
-  for (const o of O) if (o.eff === "confirmed" && o.service_id) soldBy.set(o.service_id, (soldBy.get(o.service_id) ?? 0) + 1);
-  const confirmed = O.filter((o) => o.eff === "confirmed");
-  const revenue = confirmed.reduce((a, o) => a + (o.price ?? 0), 0);
+  for (const o of O) if (PAID.includes(o.eff) && o.service_id) soldBy.set(o.service_id, (soldBy.get(o.service_id) ?? 0) + 1);
+  const confirmed = O.filter((o) => PAID.includes(o.eff));
+  // Qabul qilingan summa: yakunlanganda to‘liq narx, aks holda faqat tasdiqlangan avans
+  const revenue = confirmed.reduce((a, o) => a + (o.eff === "completed" ? (o.price ?? 0) : Number(o.deposit_amount ?? 0)), 0);
   const day = Date.now() - 864e5;
 
   const stats: [string, string][] = [
@@ -73,8 +75,9 @@ export default async function AdminPage() {
     ["Telegram ulangan", String(P.filter((p) => p.tg_chat_id).length)],
     ["Xizmatlar", String(S.length)],
     ["Buyurtmalar", String(O.length)],
-    ["Sotilgan (to‘langan)", String(confirmed.length)],
-    ["Jami tushum", sum(revenue)],
+    ["Sotilgan (avans to‘langan)", String(confirmed.length)],
+    ["Yakunlangan", String(O.filter((o) => o.eff === "completed").length)],
+    ["Qabul qilingan summa", sum(revenue)],
     ["Oxirgi 24 soatda kirgan", String(fbUsers.filter((u) => u.lastSignInAt > day).length)],
   ];
 
@@ -104,10 +107,11 @@ export default async function AdminPage() {
 
         <section className="space-y-3">
           <h2 className="font-display text-xl font-bold">Xizmatlar</h2>
-          <Table head={["Qo‘yilgan", "Xizmat", "Ijodkor", "Kategoriya", "Narx", "Sotilgan", "Holat", "Amallar"]}>
+          <Table head={["Qo‘yilgan", "Xizmat", "Ijodkor", "Kategoriya", "Narx", "Sotilgan", "Holat", "Bosh sahifada", "Amallar"]}>
             {S.slice(0, 200).map((s) => (
               <tr key={s.id}><Td>{fmt(s.created_at)}</Td><Td strong>{s.title}</Td><Td>{name(s.owner_id)}</Td><Td>{s.category ?? "—"}</Td><Td>{sum(s.price)}</Td><Td>{soldBy.get(s.id) ?? 0}</Td><Td>{s.status === "active" ? "Faol" : "Nofaol"}</Td>
-                <Td><ServiceActions s={{ id: s.id, title: s.title, description: s.description ?? "", category: s.category ?? "boshqa", price: s.price, status: s.status }} /></Td></tr>
+                <Td>{s.featured_until && new Date(s.featured_until).getTime() > Date.now() ? `${fmt(s.featured_until)} gacha` : "—"}</Td>
+                <Td><ServiceActions s={{ id: s.id, title: s.title, description: s.description ?? "", category: s.category ?? "boshqa", price: s.price, status: s.status, featured: Boolean(s.featured_until && new Date(s.featured_until).getTime() > Date.now()) }} /></Td></tr>
             ))}
           </Table>
         </section>

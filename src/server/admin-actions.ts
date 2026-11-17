@@ -35,6 +35,17 @@ export async function adminUpdateService(id: string, v: ServiceEdit): Promise<R>
   });
 }
 
+/** Admin xizmatni istalgan vaqtda bepul bosh sahifaga chiqaradi (days > 0) yoki olib tashlaydi (days = 0). */
+export async function adminSetFeatured(id: string, days: number): Promise<R> {
+  return run(async () => {
+    await requireAdmin();
+    if (!Number.isInteger(days) || days < 0 || days > 365) throw new Error("Kun soni noto‘g‘ri");
+    const { error } = await admin().from("services").update({ featured_until: days === 0 ? null : new Date(Date.now() + days * 864e5).toISOString() }).eq("id", id);
+    if (error) throw error;
+    revalidatePath("/");
+  });
+}
+
 export async function adminDeleteService(id: string): Promise<R> {
   return run(async () => {
     await requireAdmin();

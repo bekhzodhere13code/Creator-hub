@@ -1,7 +1,7 @@
 import "server-only";
-import { getSession } from "./session";
+import { getSession, isAdminSession } from "./session";
 import { admin } from "./supabase";
-import type { Order, OrderStatus, PortfolioItem, Profile, Service } from "@/lib/utils";
+import { PAID_STATUSES, type Order, type OrderStatus, type PortfolioItem, type Profile, type Service } from "@/lib/utils";
 
 export type AppData = {
   me: Profile;
@@ -58,7 +58,8 @@ export async function loadOrder(userId: string, id: string): Promise<Order | nul
 async function shapeOrder(userId: string, o: Record<string, unknown>, ownerClick: string | null): Promise<Order> {
   const status = effectiveStatus(o as { status: string; expires_at: string | null });
   let owner_click: string | null = null;
-  if ((status === "pending" || status === "new") && o.client_id === userId) {
+  // Mijozga Click raqami to‘lov kutilayotgan bosqichlarda ko‘rinadi (avans va yakuniy to‘lov)
+  if ((status === "pending" || status === "new" || status === "delivered" || status === "final_pending") && o.client_id === userId) {
     owner_click = ownerClick;
     if (owner_click === null) {
       const { data } = await admin().from("profiles").select("click_number").eq("id", o.owner_id as string).maybeSingle();
@@ -70,28 +71,34 @@ async function shapeOrder(userId: string, o: Record<string, unknown>, ownerClick
     price: o.price == null ? null : Number(o.price), client_id: (o.client_id as string | null) ?? null, owner_id: (o.owner_id as string | null) ?? null,
     status, expires_at: (o.expires_at as string | null) ?? null, created_at: (o.created_at as string | null) ?? null,
     decided_at: (o.decided_at as string | null) ?? null, owner_click,
+    deposit_percent: Number(o.deposit_percent ?? 100),
+    deposit_amount: o.deposit_amount == null ? null : Number(o.deposit_amount),
+    final_amount: o.final_amount == null ? null : Number(o.final_amount),
   };
 }
 
 export async function loadAppData(userId: string): Promise<AppData> {
   const db = admin();
   const meRow = await ensureProfile(userId);
-  const [profiles, services, portfolio, orders, sold] = await Promise.all([
+  const [profiles, services, portfolio, orders, sold, wallet] = await Promise.all([
     // Faqat tizimga kirgan (claimed) va bloklanmagan foydalanuvchilar ko‘rinadi
     db.from("profiles").select("*").eq("claimed", true).eq("banned", false).order("created_at", { ascending: false }).limit(500),
     db.from("services").select("*").or(`status.eq.active,owner_id.eq.${userId}`).order("created_at", { ascending: false }).limit(500),
     db.from("portfolio").select("*").order("created_at", { ascending: false }).limit(1000),
     db.from("orders").select("*").or(`client_id.eq.${userId},owner_id.eq.${userId}`).order("created_at", { ascending: false }).limit(200),
-    db.from("orders").select("service_id").eq("status", "confirmed").not("service_id", "is", null).limit(5000),
+    db.from("orders").select("service_id").in("status", PAID_STATUSES).not("service_id", "is", null).limit(5000),
+    // Ichki balans: birinchi kirishda 100 000 beriladi (bir marta)
+    db.rpc("ensure_wallet", { p_user: userId }),
   ]);
   for (const r of [profiles, services, portfolio, orders, sold]) if (r.error) throw r.error;
+  if (wallet.error) console.error("[wallet] ensure_wallet", wallet.error);
   const soldBy = new Map<string, number>();
   for (const r of sold.data as { service_id: string }[]) soldBy.set(r.service_id, (soldBy.get(r.service_id) ?? 0) + 1);
 
   const clickByOwner = new Map<string, string | null>();
   for (const p of profiles.data as ProfileRow[]) clickByOwner.set(p.id, p.click_number);
 
-  const me: Profile = { ...publicProfile(meRow), click_number: meRow.click_number, tg_linked: Boolean(meRow.tg_chat_id) };
+  const me: Profile = { ...publicProfile(meRow), click_number: meRow.click_number, tg_linked: Boolean(meRow.tg_chat_id), balance: Number(wallet.data ?? 0), is_admin: isAdminSession(await getSession()) };
   const list = (profiles.data as ProfileRow[])
     .filter((p) => p.id !== userId && ((p.first_name ?? "").trim() || (p.last_name ?? "").trim()))
     .map(publicProfile);

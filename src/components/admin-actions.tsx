@@ -1,7 +1,7 @@
 "use client";
 import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
-import { adminBanUser, adminDeleteService, adminDeleteUnclaimedProfile, adminUpdateService } from "@/server/admin-actions";
+import { adminBanUser, adminDeleteService, adminDeleteUnclaimedProfile, adminSetFeatured, adminUpdateService } from "@/server/admin-actions";
 import { CATEGORIES } from "@/lib/utils";
 
 type R = { ok: true } | { ok: false; error: string };
@@ -42,7 +42,7 @@ export function DeleteProfileButton({ id, name }: { id: string; name: string }) 
   );
 }
 
-export type ServiceRow = { id: string; title: string; description: string; category: string; price: number | null; status: string };
+export type ServiceRow = { id: string; title: string; description: string; category: string; price: number | null; status: string; featured?: boolean };
 
 export function ServiceActions({ s }: { s: ServiceRow }) {
   const { pending, err, act } = useAct();
@@ -57,6 +57,9 @@ export function ServiceActions({ s }: { s: ServiceRow }) {
   return (
     <span className="inline-flex flex-col items-end gap-1">
       <span className="inline-flex gap-2">
+        {s.status === "active" && (s.featured
+          ? <button className={small} disabled={pending} onClick={() => act(() => adminSetFeatured(s.id, 0))}>Bosh sahifadan olish</button>
+          : <button className={small} disabled={pending} onClick={() => act(() => adminSetFeatured(s.id, 30))}>Bosh sahifaga (30 kun, bepul)</button>)}
         <button className={small} onClick={() => setOpen(true)}>Tahrirlash</button>
         <button className={danger} disabled={pending} onClick={() => act(() => adminDeleteService(s.id), `“${s.title}” xizmati butunlay o‘chirilsinmi?`)}>O‘chirish</button>
       </span>

@@ -1,14 +1,16 @@
 "use client";
 import Link from "next/link";
-import { ArrowRight, Camera, Flame, TrendingUp } from "lucide-react";
+import { ArrowRight, Camera, Flame, Star, TrendingUp } from "lucide-react";
 import { CreatorCard, ServiceCard } from "./cards";
 import { useT } from "@/lib/i18n-client";
 import { useStore } from "@/lib/store";
+import { isFeatured } from "@/lib/utils";
 
 export function HomeView() {
   const { t } = useT();
   const { me, data, withOwner } = useStore();
   const services = data.services.filter((s) => s.status === "active").sort((a, b) => (b.created_at ?? "").localeCompare(a.created_at ?? "")).slice(0, 6).map(withOwner);
+  const featured = data.services.filter((s) => s.status === "active" && isFeatured(s)).sort((a, b) => (b.featured_until ?? "").localeCompare(a.featured_until ?? "")).slice(0, 6).map(withOwner);
   const top = data.services.filter((s) => s.status === "active" && (s.sold_count ?? 0) > 0).sort((a, b) => (b.sold_count ?? 0) - (a.sold_count ?? 0)).slice(0, 3).map(withOwner);
   const creators = data.profiles.filter((p) => p.id !== me.id && (p.specialties?.length ?? 0) > 0).slice(0, 4);
 
@@ -34,6 +36,19 @@ export function HomeView() {
           </Link>
         </div>
       </section>
+
+      {featured.length > 0 && (
+        <section className="rounded-3xl bg-gradient-to-br from-amber-50 to-white p-4 ring-1 ring-amber-300/40 dark:from-[#2E2716] dark:to-[#1A1918] dark:ring-amber-300/20 sm:p-6">
+          <div className="mb-4 flex items-center gap-3">
+            <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-amber-400 text-amber-950"><Star className="h-5 w-5 fill-current" /></span>
+            <div>
+              <h2 className="text-xl font-extrabold sm:text-2xl">{t.wallet.homeTitle}</h2>
+              <p className="text-sm text-ink-soft">{t.wallet.homeText}</p>
+            </div>
+          </div>
+          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">{featured.map((s) => <ServiceCard key={s.id} s={s} t={t} />)}</div>
+        </section>
+      )}
 
       {top.length > 0 && (
         <section className="rounded-3xl bg-gradient-to-br from-brand-50 to-white p-4 ring-1 ring-brand/10 dark:from-[#25223A] dark:to-[#1A1918] dark:ring-white/10 sm:p-6">
